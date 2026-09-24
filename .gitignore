@@ -1,0 +1,14 @@
+# IDE
+.idea/
+.vscode/
+
+# OS
+.DS_Store
+Thumbbs.db
+
+# Enviroment
+.env
+.env.*
+
+# Logs
+*.log
