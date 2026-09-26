@@ -5,18 +5,13 @@ import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 
-public record RegisterRequest(
-
-        @NotBlank(message = "Full Name is required")
-        String fullName,
-
+public record LoginRequest(
         @Email
         @NotBlank(message = "Email is required")
         String email,
 
         @NotBlank(message = "Password is required")
         String password,
-        String profilePictureUrl,
 
         @NotNull(message = "Provider is required")
         AuthProvider provider
