@@ -4,10 +4,20 @@ import com.authplatform.backend.entity.enums.AuthProvider;
 import com.authplatform.backend.entity.enums.Role;
 import com.authplatform.backend.entity.enums.Status;
 import jakarta.persistence.*;
+import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.UpdateTimestamp;
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.core.userdetails.UserDetails;
+
+import java.time.Instant;
+import java.util.Collection;
+import java.util.List;
 
 @Entity
 @Table(name = "users")
-public class User {
+public class User  implements UserDetails {
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id", nullable = false)
@@ -38,7 +48,15 @@ public class User {
 
     @Enumerated(value = EnumType.STRING)
     @Column(name = "auth_provider", nullable = false, length = 150)
-    private AuthProvider provider = AuthProvider.LOCAL;
+    private AuthProvider provider;
+
+    @CreationTimestamp
+    @Column(name = "created_at", nullable = false, updatable = false)
+    private Instant createdAt;
+
+    @UpdateTimestamp
+    @Column(name = "updated_at", nullable = false)
+    private Instant updatedAt;
 
     public User() {
     }
@@ -65,6 +83,16 @@ public class User {
 
     public void setEmail(String email) {
         this.email = email;
+    }
+
+    @Override
+    public Collection<? extends GrantedAuthority> getAuthorities() {
+        return List.of(new SimpleGrantedAuthority(role.name()));
+    }
+
+    @Override
+    public String getUsername() {
+        return email;
     }
 
     public String getPassword() {
@@ -114,4 +142,13 @@ public class User {
     public void setProvider(AuthProvider provider) {
         this.provider = provider;
     }
+
+    public Instant getCreatedAt() {
+        return createdAt;
+    }
+
+    public Instant getUpdatedAt() {
+        return updatedAt;
+    }
+
 }
