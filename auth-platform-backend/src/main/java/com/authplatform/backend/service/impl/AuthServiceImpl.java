@@ -4,7 +4,7 @@ import com.authplatform.backend.dto.request.LoginRequest;
 import com.authplatform.backend.dto.request.RegisterRequest;
 import com.authplatform.backend.dto.response.AuthResponse;
 import com.authplatform.backend.entity.User;
-import com.authplatform.backend.exception.UserAlreadyExistException;
+import com.authplatform.backend.exception.UserAlreadyExistsException;
 import com.authplatform.backend.mapper.UserMapper;
 import com.authplatform.backend.repository.UserRepository;
 import com.authplatform.backend.security.JwtService;
@@ -49,7 +49,7 @@ public class AuthServiceImpl implements AuthService {
         User user = resolveUserByEmail(request.email());
         if (user != null && user.getEmail().equals(request.email())) {
             log.debug("User already exist with {}", request.email());
-            throw new UserAlreadyExistException(request.email());
+            throw new UserAlreadyExistsException();
         }
 
         // 2. Map request -> entity
