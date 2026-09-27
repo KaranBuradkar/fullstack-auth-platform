@@ -1,5 +1,7 @@
 package com.authplatform.backend.security;
 
+import com.authplatform.backend.common.exception.ApiAuthenticationException;
+import com.authplatform.backend.common.response.ApiErrorCode;
 import com.authplatform.backend.config.JwtProperties;
 import com.authplatform.backend.entity.User;
 import com.authplatform.backend.entity.UserToken;
@@ -46,11 +48,15 @@ public class JwtService {
     }
 
     private Claims getChaim(String token) {
-        return Jwts.parser()
-                .verifyWith(getSecretKey())
-                .build()
-                .parseSignedClaims(token)
-                .getPayload();
+        try {
+            return Jwts.parser()
+                    .verifyWith(getSecretKey())
+                    .build()
+                    .parseSignedClaims(token)
+                    .getPayload();
+        } catch (Exception e) {
+            throw new ApiAuthenticationException(ApiErrorCode.INVALID_TOKEN);
+        }
     }
 
     public Date getExpiry(String token) {
@@ -91,7 +97,7 @@ public class JwtService {
         return userTokenRepository.findByUser(user)
                 .orElseThrow(() -> {
                     log.warn("User token not found for userId {}", user.getId().toString());
-                    return new UserTokenNotFoundException("User token not found");
+                    return new UserTokenNotFoundException();
                 });
     }
 

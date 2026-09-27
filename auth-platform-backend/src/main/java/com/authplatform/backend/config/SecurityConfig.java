@@ -1,11 +1,13 @@
 package com.authplatform.backend.config;
 
+import com.authplatform.backend.common.filter.RequestIdFilter;
 import com.authplatform.backend.security.JwtAuthFilter;
+import com.authplatform.backend.security.RestAccessDeniedHandler;
+import com.authplatform.backend.security.RestAuthenticationEntryPoint;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
-import org.springframework.security.config.annotation.web.configurers.ExceptionHandlingConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
@@ -14,15 +16,21 @@ import org.springframework.web.servlet.HandlerExceptionResolver;
 @Configuration
 public class SecurityConfig {
 
-    private final HandlerExceptionResolver handlerExceptionResolver;
     private final JwtAuthFilter jwtAuthFilter;
+    private final RequestIdFilter requestIdFilter;
+    private final RestAccessDeniedHandler restAccessDeniedHandler;
+    private final RestAuthenticationEntryPoint restAuthenticationEntryPoint;
 
     public SecurityConfig(
             HandlerExceptionResolver handlerExceptionResolver,
-            JwtAuthFilter jwtAuthFilter
+            RestAuthenticationEntryPoint restAuthenticationEntryPoint,
+            RestAccessDeniedHandler restAccessDeniedHandler,
+            JwtAuthFilter jwtAuthFilter, RequestIdFilter requestIdFilter
     ) {
-        this.handlerExceptionResolver = handlerExceptionResolver;
         this.jwtAuthFilter = jwtAuthFilter;
+        this.restAuthenticationEntryPoint = restAuthenticationEntryPoint;
+        this.restAccessDeniedHandler = restAccessDeniedHandler;
+        this.requestIdFilter = requestIdFilter;
     }
 
     @Bean
@@ -37,19 +45,18 @@ public class SecurityConfig {
                             .permitAll()
                             .anyRequest().authenticated();
                 })
+                // Generate Request ID Filter
+                .addFilterBefore(requestIdFilter, UsernamePasswordAuthenticationFilter.class)
                 // Token validation filter
                 .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class)
                 // any occurred exception handler
-                .exceptionHandling(this::resolveConfigure);
+                .exceptionHandling(exception ->
+                        exception
+                                .authenticationEntryPoint(restAuthenticationEntryPoint)
+                                .accessDeniedHandler(restAccessDeniedHandler)
+                );
 
         return httpSecurity.build();
-    }
-
-    private void resolveConfigure(ExceptionHandlingConfigurer<HttpSecurity> configurer) {
-        configurer.accessDeniedHandler(
-                (request, response, e)
-                        -> handlerExceptionResolver.resolveException(request, response, null, e)
-        );
     }
 
     private String[] shouldSkipUrl() {

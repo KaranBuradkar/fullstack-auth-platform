@@ -3,9 +3,9 @@ package com.authplatform.backend.exception;
 import com.authplatform.backend.common.exception.ApiException;
 import com.authplatform.backend.common.response.ApiErrorCode;
 
-public class UserTokenNotFoundException extends ApiException {
+public class UserAlreadyExistsException extends ApiException {
 
-    public UserTokenNotFoundException() {
-        super(ApiErrorCode.USER_TOKEN_NOT_FOUND);
+    public UserAlreadyExistsException() {
+        super(ApiErrorCode.EMAIL_ALREADY_EXISTS);
     }
 }

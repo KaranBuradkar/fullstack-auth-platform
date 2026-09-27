@@ -1,9 +1,8 @@
 package com.authplatform.backend.security;
 
+import com.authplatform.backend.common.exception.ApiAuthenticationException;
+import com.authplatform.backend.common.response.ApiErrorCode;
 import com.authplatform.backend.entity.User;
-import com.authplatform.backend.exception.InvalidJwtTokenException;
-import com.authplatform.backend.exception.MissingJWTException;
-import com.authplatform.backend.exception.UserNotFoundException;
 import com.authplatform.backend.repository.UserRepository;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
@@ -17,7 +16,6 @@ import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.filter.OncePerRequestFilter;
-import org.springframework.web.servlet.HandlerExceptionResolver;
 
 import java.io.IOException;
 import java.util.Collection;
@@ -27,14 +25,14 @@ public class JwtAuthFilter extends OncePerRequestFilter {
 
     private static final Logger log = LoggerFactory.getLogger(JwtAuthFilter.class);
     private final UserRepository userRepository;
-    private final HandlerExceptionResolver exceptionResolver;
+    private final RestAuthenticationEntryPoint authenticationEntryPoint;
     private final JwtService jwtService;
 
     public JwtAuthFilter(UserRepository userRepository,
-                         HandlerExceptionResolver handlerExceptionResolver,
+                         RestAuthenticationEntryPoint restAuthenticationEntryPoint,
                          JwtService jwtService) {
         this.userRepository = userRepository;
-        this.exceptionResolver = handlerExceptionResolver;
+        this.authenticationEntryPoint = restAuthenticationEntryPoint;
         this.jwtService = jwtService;
     }
 
@@ -55,25 +53,25 @@ public class JwtAuthFilter extends OncePerRequestFilter {
             // Protected API → must have JWT
             if (token == null) {
                 log.warn("Missing Jwt Token");
-                throw new MissingJWTException("Missing Bearer token");
+                throw new ApiAuthenticationException(ApiErrorCode.TOKEN_MISSING);
             }
 
             // 3. Validate Token
             if (!jwtService.isValidAndNotExpiredToken(token)) {
                 log.warn("Invalid token signature or expired token");
-                throw new InvalidJwtTokenException("Invalid token signature or expired token");
+                throw new ApiAuthenticationException(ApiErrorCode.INVALID_TOKEN);
             }
 
             // 4. Extract email from token
             String email = jwtService.getUsernameFromToken(token);
             if (email == null) {
                 log.warn("Invalid token signature");
-                throw new InvalidJwtTokenException("Invalid token signature");
+                throw new ApiAuthenticationException(ApiErrorCode.INVALID_TOKEN);
             }
 
             // 5. Fetch user from repository ( Database )
             User user = userRepository.findByEmail(email)
-                    .orElseThrow(() -> new UserNotFoundException("No one account found this email"));
+                    .orElseThrow(() -> new ApiAuthenticationException(ApiErrorCode.USER_NOT_FOUND));
             Collection<? extends GrantedAuthority> authorities = user.getAuthorities();
 
             // 6. Set user is authenticated
@@ -81,9 +79,17 @@ public class JwtAuthFilter extends OncePerRequestFilter {
                     = new UsernamePasswordAuthenticationToken(user, null, authorities);
             SecurityContextHolder.getContext().setAuthentication(authenticationToken);
 
+        } catch (ApiAuthenticationException e) {
+
+            log.error("Jwt filter error: {}", e.getMessage());
+            authenticationEntryPoint.commence(request, response, e);
+
         } catch (RuntimeException e) {
             log.error("Jwt filter error: {}", e.getMessage());
-            exceptionResolver.resolveException(request, response, null, e);
+            authenticationEntryPoint.commence(
+                    request, response,
+                    new ApiAuthenticationException(ApiErrorCode.FORBIDDEN)
+            );
         }
 
         // 7. Continue filters
