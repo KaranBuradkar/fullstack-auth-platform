@@ -4,8 +4,10 @@ import com.authplatform.backend.common.constants.RequestConstants;
 import com.authplatform.backend.common.response.ApiResponse;
 import com.authplatform.backend.common.response.ApiSuccessCode;
 import com.authplatform.backend.dto.request.LoginRequest;
+import com.authplatform.backend.dto.request.RefreshTokenRequest;
 import com.authplatform.backend.dto.request.RegisterRequest;
 import com.authplatform.backend.dto.response.AuthResponse;
+import com.authplatform.backend.dto.response.UserTokenResponse;
 import com.authplatform.backend.service.AuthService;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
@@ -42,6 +44,14 @@ public class AuthController {
     ) {
         AuthResponse response = authService.login(request);
         return buildResponse(ApiSuccessCode.LOGIN_SUCCESS, response, HttpStatus.OK);
+    }
+
+    @PostMapping("/refresh")
+    public ResponseEntity<ApiResponse<UserTokenResponse>> refreshToken(
+            @RequestBody @Valid RefreshTokenRequest request
+    ) {
+        UserTokenResponse response = authService.refreshToken(request.refreshToken());
+        return buildResponse(ApiSuccessCode.TOKEN_REFRESHED, response, HttpStatus.OK);
     }
 
     /**

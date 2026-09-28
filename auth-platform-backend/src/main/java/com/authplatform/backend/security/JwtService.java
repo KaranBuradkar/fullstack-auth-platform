@@ -4,9 +4,6 @@ import com.authplatform.backend.common.exception.ApiAuthenticationException;
 import com.authplatform.backend.common.response.ApiErrorCode;
 import com.authplatform.backend.config.JwtProperties;
 import com.authplatform.backend.entity.User;
-import com.authplatform.backend.entity.UserToken;
-import com.authplatform.backend.exception.UserTokenNotFoundException;
-import com.authplatform.backend.repository.UserTokenRepository;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
@@ -24,12 +21,9 @@ public class JwtService {
 
     private final Logger log = LoggerFactory.getLogger(JwtService.class);
     private final JwtProperties jwtProperties;
-    private final UserTokenRepository userTokenRepository;
 
-    public JwtService(JwtProperties jwtProperties,
-                      UserTokenRepository userTokenRepository) {
+    public JwtService(JwtProperties jwtProperties) {
         this.jwtProperties = jwtProperties;
-        this.userTokenRepository = userTokenRepository;
     }
 
     private SecretKey getSecretKey() {
@@ -86,27 +80,7 @@ public class JwtService {
 
     @Transactional
     public String generateNewRefreshToken(User user) {
-        String refreshToken = generateToken(user, jwtProperties.refreshTokenExpiration());
-        UserToken saveUserToken = userTokenRepository.save(
-                new UserToken(refreshToken, user)
-        );
-        return saveUserToken.getRefreshToken();
+        return generateToken(user, jwtProperties.refreshTokenExpiration());
     }
 
-    private UserToken fetchUserTokenByUser(User user) {
-        return userTokenRepository.findByUser(user)
-                .orElseThrow(() -> {
-                    log.warn("User token not found for userId {}", user.getId().toString());
-                    return new UserTokenNotFoundException();
-                });
-    }
-
-    @Transactional
-    public String updateRefreshToken(User user) {
-        UserToken dbUserToken = fetchUserTokenByUser(user);
-        String newRefreshToken = generateToken(user, jwtProperties.refreshTokenExpiration());
-        dbUserToken.setRefreshToken(newRefreshToken);
-        UserToken userToken1 = userTokenRepository.save(dbUserToken);
-        return userToken1.getRefreshToken();
-    }
 }

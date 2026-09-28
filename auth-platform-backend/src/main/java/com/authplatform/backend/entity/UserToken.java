@@ -2,6 +2,8 @@ package com.authplatform.backend.entity;
 
 import jakarta.persistence.*;
 
+import java.time.Instant;
+
 @Entity
 @Table(name = "user_token")
 public class UserToken {
@@ -17,13 +19,20 @@ public class UserToken {
     @JoinColumn(name = "user_id", nullable = false, unique = true)
     private User user;
 
+    @Column(nullable = false)
+    private boolean revoked = false;
+
+    @Column(name = "expiry_date", nullable = false)
+    private Instant expiryDate;
+
     public UserToken() {}
 
     public UserToken(
-            String refreshToken, User user
+            String refreshToken, User user, Instant expiryDate
     ) {
         this.refreshToken = refreshToken;
         this.user = user;
+        this.expiryDate = expiryDate;
     }
 
     public Long getId() {
@@ -50,4 +59,19 @@ public class UserToken {
         this.user = user;
     }
 
+    public boolean isRevoked() {
+        return revoked;
+    }
+
+    public void setRevoked(boolean revoked) {
+        this.revoked = revoked;
+    }
+
+    public Instant getExpiryDate() {
+        return expiryDate;
+    }
+
+    public void setExpiryDate(Instant expiryDate) {
+        this.expiryDate = expiryDate;
+    }
 }

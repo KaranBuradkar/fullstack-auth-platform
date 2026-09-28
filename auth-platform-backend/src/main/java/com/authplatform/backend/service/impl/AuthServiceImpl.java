@@ -1,12 +1,18 @@
 package com.authplatform.backend.service.impl;
 
+import com.authplatform.backend.common.exception.RefreshTokenExpiredException;
+import com.authplatform.backend.common.exception.RefreshTokenRevokedException;
 import com.authplatform.backend.dto.request.LoginRequest;
 import com.authplatform.backend.dto.request.RegisterRequest;
 import com.authplatform.backend.dto.response.AuthResponse;
+import com.authplatform.backend.dto.response.UserTokenResponse;
 import com.authplatform.backend.entity.User;
+import com.authplatform.backend.entity.UserToken;
 import com.authplatform.backend.exception.UserAlreadyExistsException;
+import com.authplatform.backend.exception.UserTokenNotFoundException;
 import com.authplatform.backend.mapper.UserMapper;
 import com.authplatform.backend.repository.UserRepository;
+import com.authplatform.backend.repository.UserTokenRepository;
 import com.authplatform.backend.security.JwtService;
 import com.authplatform.backend.service.AuthService;
 import jakarta.transaction.Transactional;
@@ -19,6 +25,8 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import java.time.Instant;
+
 @Service
 public class AuthServiceImpl implements AuthService {
 
@@ -28,17 +36,19 @@ public class AuthServiceImpl implements AuthService {
     private final PasswordEncoder passwordEncoder;
     private final JwtService jwtService;
     private final AuthenticationManager authenticationManager;
+    private final UserTokenRepository userTokenRepository;
 
     public AuthServiceImpl(
             UserRepository userRepository,
             UserMapper userMapper,
-            PasswordEncoder passwordEncoder, JwtService jwtService, AuthenticationManager authenticationManager
-    ) {
+            PasswordEncoder passwordEncoder, JwtService jwtService, AuthenticationManager authenticationManager,
+            UserTokenRepository userTokenRepository) {
         this.userRepository = userRepository;
         this.userMapper = userMapper;
         this.passwordEncoder = passwordEncoder;
         this.jwtService = jwtService;
         this.authenticationManager = authenticationManager;
+        this.userTokenRepository = userTokenRepository;
     }
 
     @Transactional
@@ -60,10 +70,20 @@ public class AuthServiceImpl implements AuthService {
         User savedUser = userRepository.save(user);
 
         // 5. Tokens for API authentication
-        String accessToken = jwtService.generateAccessToken(user);
-        String refreshToken = jwtService.generateNewRefreshToken(user);
+        String accessToken = jwtService.generateAccessToken(savedUser);
+        String refreshToken = jwtService.generateNewRefreshToken(savedUser);
+        Instant expiryDate = jwtService.getExpiry(refreshToken).toInstant();
 
-        return userMapper.toResponse(savedUser, accessToken, refreshToken);
+        // 6. Save User Refresh Token
+        UserToken userToken = new UserToken(refreshToken, savedUser, expiryDate);
+        UserToken saveUserToken = userTokenRepository.save(userToken);
+
+        return userMapper.toResponse(
+                savedUser,
+                accessToken,
+                userToken.getRefreshToken(),
+                saveUserToken.getExpiryDate()
+        );
     }
 
     @Transactional
@@ -83,16 +103,81 @@ public class AuthServiceImpl implements AuthService {
         // 2. Extract user from authentication
         User authenticUser = (User) authentication.getPrincipal();
         UsernamePasswordAuthenticationToken authenticationToken =
-                new UsernamePasswordAuthenticationToken(authenticUser, null, authenticUser.getAuthorities());
+                new UsernamePasswordAuthenticationToken(
+                        authenticUser,
+                        null,
+                        authenticUser.getAuthorities()
+                );
 
         // 3. Set User authenticated in SecurityContextHolder
         SecurityContextHolder.getContext().setAuthentication(authenticationToken);
 
         // 4. Tokens for API authentication
         String accessToken = jwtService.generateAccessToken(authenticUser);
-        String refreshToken = jwtService.updateRefreshToken(authenticUser);
+        String refreshToken = jwtService.generateNewRefreshToken(authenticUser);
+        Instant expiryDate = jwtService.getExpiry(refreshToken).toInstant();
 
-        return userMapper.toResponse(authenticUser, accessToken, refreshToken);
+
+        // 5. Update User Refresh Token
+        UserToken userToken = userTokenRepository
+                .findByUser(authenticUser)
+                .orElseThrow(UserTokenNotFoundException::new);
+
+        userToken.setRefreshToken(refreshToken);
+        userToken.setExpiryDate(expiryDate);
+        userToken.setRevoked(false);
+        UserToken saveUserToken = userTokenRepository.save(userToken);
+
+        return userMapper.toResponse(
+                authenticUser,
+                accessToken,
+                userToken.getRefreshToken(),
+                saveUserToken.getExpiryDate()
+        );
+    }
+
+    @Transactional
+    @Override
+    public UserTokenResponse refreshToken(String token) {
+
+        // 1. Verify userToken already exist
+        UserToken userToken = verifyRefreshToken(token);
+
+        // 2. Fetch User
+        User user = userToken.getUser();
+
+        // 3. Generate Resource of UserToken
+        String accessToken = jwtService.generateAccessToken(user);
+        String refreshToken = jwtService.generateNewRefreshToken(user);
+        Instant expiryDate = jwtService.getExpiry(refreshToken).toInstant();
+
+        // 4. Save User Refresh Token
+        userToken.setRefreshToken(refreshToken);
+        userToken.setExpiryDate(expiryDate);
+        userToken.setRevoked(false);
+        UserToken saveUserToken = userTokenRepository.save(userToken);
+
+        return new UserTokenResponse(
+                accessToken,
+                saveUserToken.getRefreshToken(),
+                saveUserToken.getExpiryDate()
+        );
+    }
+
+    private UserToken verifyRefreshToken(String token) {
+        UserToken refreshToken = userTokenRepository
+                .findByRefreshToken(token)
+                .orElseThrow(UserTokenNotFoundException::new);
+
+        if(refreshToken.isRevoked()) {
+            throw new RefreshTokenRevokedException();
+        }
+
+        if(refreshToken.getExpiryDate().isBefore(Instant.now())) {
+            throw new RefreshTokenExpiredException();
+        }
+
+        return refreshToken;
     }
 
     private User resolveUserByEmail(String email) {

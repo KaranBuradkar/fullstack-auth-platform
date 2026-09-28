@@ -67,6 +67,10 @@ public enum ApiErrorCode {
             "The refresh token has expired"
     ),
 
+    REFRESH_TOKEN_REVOKED(
+            HttpStatus.UNAUTHORIZED,
+            "The user refresh token not found"),
+
     // =========================
     // Authorization
     // =========================

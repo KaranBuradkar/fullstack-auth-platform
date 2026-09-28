@@ -7,6 +7,8 @@ import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.ReportingPolicy;
 
+import java.time.Instant;
+
 @Mapper(componentModel = "spring", unmappedTargetPolicy = ReportingPolicy.IGNORE)
 public interface UserMapper {
 
@@ -14,5 +16,6 @@ public interface UserMapper {
 
     @Mapping(source = "accessToken", target = "accessToken")
     @Mapping(source = "refreshToken", target = "refreshToken")
-    AuthResponse toResponse(User user, String accessToken, String refreshToken);
+    @Mapping(source = "expiryDate", target = "expirationIn")
+    AuthResponse toResponse(User user, String accessToken, String refreshToken, Instant expiryDate);
 }
