@@ -17,6 +17,7 @@ public record AuthResponse(
         AuthProvider provider,
         String accessToken,
         String refreshToken,
+        Instant expirationIn,
         Instant createdAt,
         Instant updatedAt
 ) {
