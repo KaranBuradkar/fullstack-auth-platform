@@ -69,7 +69,7 @@ public enum ApiErrorCode {
 
     REFRESH_TOKEN_REVOKED(
             HttpStatus.UNAUTHORIZED,
-            "The user refresh token not found"),
+            "The Refresh token has been revoked and can no longer be used"),
 
     // =========================
     // Authorization
@@ -102,6 +102,11 @@ public enum ApiErrorCode {
     EMAIL_ALREADY_EXISTS(
             HttpStatus.CONFLICT,
             "An account with this email already exists"
+    ),
+
+    EMAIL_NOT_FOUND(
+            HttpStatus.NOT_FOUND,
+            "User email not found"
     ),
 
     PHONE_ALREADY_EXISTS(
