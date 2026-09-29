@@ -1,7 +1,9 @@
 package com.authplatform.backend.service.impl;
 
+import com.authplatform.backend.common.exception.ApiException;
 import com.authplatform.backend.common.exception.RefreshTokenExpiredException;
 import com.authplatform.backend.common.exception.RefreshTokenRevokedException;
+import com.authplatform.backend.common.response.ApiErrorCode;
 import com.authplatform.backend.dto.request.LoginRequest;
 import com.authplatform.backend.dto.request.RegisterRequest;
 import com.authplatform.backend.dto.response.AuthResponse;
@@ -102,6 +104,7 @@ public class AuthServiceImpl implements AuthService {
 
         // 2. Extract user from authentication
         User authenticUser = (User) authentication.getPrincipal();
+        if (authenticUser == null) throw new ApiException(ApiErrorCode.UNAUTHORIZED);
         UsernamePasswordAuthenticationToken authenticationToken =
                 new UsernamePasswordAuthenticationToken(
                         authenticUser,
@@ -116,7 +119,6 @@ public class AuthServiceImpl implements AuthService {
         String accessToken = jwtService.generateAccessToken(authenticUser);
         String refreshToken = jwtService.generateNewRefreshToken(authenticUser);
         Instant expiryDate = jwtService.getExpiry(refreshToken).toInstant();
-
 
         // 5. Update User Refresh Token
         UserToken userToken = userTokenRepository
@@ -164,6 +166,24 @@ public class AuthServiceImpl implements AuthService {
         );
     }
 
+    @Override
+    public void logout(String name) {
+        User user = userRepository.findByEmail(name)
+                .orElseThrow(() -> new ApiException(ApiErrorCode.EMAIL_NOT_FOUND));
+        UserToken userToken = userTokenRepository.findByUser(user)
+                .orElseThrow(UserTokenNotFoundException::new);
+
+        userToken.setRevoked(true);
+        userToken.setExpiryDate(Instant.now());
+
+        userTokenRepository.save(userToken);
+    }
+
+    /**
+     * Verify JWT token is revoked, expired or not
+     * @param token JWT Refresh Token
+     * @return UserToken entity
+     */
     private UserToken verifyRefreshToken(String token) {
         UserToken refreshToken = userTokenRepository
                 .findByRefreshToken(token)

@@ -41,7 +41,7 @@ public class JwtService {
                 .compact();
     }
 
-    private Claims getChaim(String token) {
+    private Claims getClaims(String token) {
         try {
             return Jwts.parser()
                     .verifyWith(getSecretKey())
@@ -54,19 +54,28 @@ public class JwtService {
     }
 
     public Date getExpiry(String token) {
-        Claims chaim = getChaim(token);
-        return chaim.getExpiration();
+        Claims claims = getClaims(token);
+        return claims.getExpiration();
     }
 
     public boolean isValidAndNotExpiredToken(String token) {
+        // Verify given token access time must be
+        // equal to access token expiration
+        Claims claims = getClaims(token);
+        long diff = claims.getExpiration().getTime() - claims.getIssuedAt().getTime();
+        if(diff != jwtProperties.accessTokenExpiration()) {
+            log.error("It is not a access token");
+            throw new ApiAuthenticationException(ApiErrorCode.INVALID_TOKEN);
+        }
+        // Verify jwt token Expiration
         Date expiry = getExpiry(token);
         return expiry.after(new Date());
     }
 
     public String getUsernameFromToken(String token) {
         try {
-            Claims chaim = getChaim(token);
-            return chaim.getSubject();
+            Claims claims = getClaims(token);
+            return claims.getSubject();
         } catch (Exception e) {
             log.warn(e.getMessage());
             throw e;
