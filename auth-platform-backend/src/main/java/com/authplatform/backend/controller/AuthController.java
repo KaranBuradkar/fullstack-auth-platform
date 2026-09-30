@@ -1,6 +1,6 @@
 package com.authplatform.backend.controller;
 
-import com.authplatform.backend.common.constants.RequestConstants;
+import com.authplatform.backend.common.controller.BaseController;
 import com.authplatform.backend.common.response.ApiResponse;
 import com.authplatform.backend.common.response.ApiSuccessCode;
 import com.authplatform.backend.dto.request.LoginRequest;
@@ -21,14 +21,13 @@ import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 @RequestMapping("/api/v1/auth")
-public class AuthController {
+public class AuthController extends BaseController {
 
     private final AuthService authService;
-    private final HttpServletRequest request;
 
     public AuthController(AuthService authService, HttpServletRequest request) {
+        super(request);
         this.authService = authService;
-        this.request = request;
     }
 
     @PostMapping("/register")
@@ -63,30 +62,4 @@ public class AuthController {
         return buildResponse(ApiSuccessCode.LOGOUT_SUCCESS, null, HttpStatus.OK);
     }
 
-    /**
-     * Build API Response
-     * @param code = which task completed and message
-     * @param data = return response
-     * @param status = HttpStatus code
-     * @param <T> = Generic data type for custom data response
-     * @return build ResponseEntity instance
-     */
-    private <T> ResponseEntity<ApiResponse<T>> buildResponse(
-            ApiSuccessCode code, T data,
-            HttpStatus status
-    ) {
-        ApiResponse<T> response = ApiResponse.success(
-                status.value(),
-                code.name(),
-                code.message(),
-                data,
-                request.getRequestURI(),
-                getRequestId()
-        );
-        return ResponseEntity.status(status).body(response);
-    }
-
-    private String getRequestId() {
-        return (String) request.getAttribute(RequestConstants.REQUEST_ID);
-    }
 }

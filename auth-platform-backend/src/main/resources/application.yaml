@@ -14,3 +14,7 @@ application:
       secret-key: [JWT_SECRET]
       access-token-expiration: 900000 # 15 min
       refresh-token-expiration: 3600000 # 1hr OR 60 min
+
+    otp:
+      seed: [OTP_GEN_SEED]
+      otp-expiration: 300 # 5 min = 300 sec
