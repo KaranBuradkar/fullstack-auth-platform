@@ -68,7 +68,7 @@ public class EmailOtpServiceImpl implements EmailOtpService {
         }
 
         EmailVerificationOtp verificationOtp = emailVerificationOtpRepository
-                .findFirstByUserAndUsedFalse(user)
+                .findFirstByUser(user)
                 .orElseThrow(() -> new ApiException(ApiErrorCode.OTP_NOT_FOUND));
 
         if(verificationOtp.getExpiresAt().isBefore((Instant.now()))) {
