@@ -39,13 +39,17 @@ public class EmailOtpServiceImpl implements EmailOtpService {
     @Transactional
     @Override
     public void sendVerificationOtp(String email) {
+        // Fetch user by email
         User user = userRepository.findByEmail(email)
                 .orElseThrow(UserNotFoundException::new);
 
+        // Delete Previous never usable otp entries
         emailVerificationOtpRepository.deleteAllByUserEmail(user.getEmail());
 
+        // generate otp
         String otp = otpProperties.generateOtp();
 
+        // Create EmailVerificationOtp
         EmailVerificationOtp verificationOtp = new EmailVerificationOtp();
         verificationOtp.setUser(user);
         verificationOtp.setOtp(otp);
@@ -53,6 +57,7 @@ public class EmailOtpServiceImpl implements EmailOtpService {
 
         EmailVerificationOtp saveEmailOtp = emailVerificationOtpRepository.save(verificationOtp);
 
+        // Send Mail by EmailService
         emailService.sendVerificationOtp(user.getEmail(), saveEmailOtp.getOtp());
     }
 
@@ -60,25 +65,26 @@ public class EmailOtpServiceImpl implements EmailOtpService {
     @Override
     public void verifyVerificationOtp(VerifyEmailRequest request) {
 
+        // Fetch User by user email
         User user = userRepository.findByEmail(request.email())
                 .orElseThrow(UserNotFoundException::new);
 
-        if (user.isEmailVerified()) {
-            throw new ApiException(ApiErrorCode.EMAIL_ALREADY_VERIFIED);
-        }
-
+        // Fetch EmailVerificationOtp
         EmailVerificationOtp verificationOtp = emailVerificationOtpRepository
-                .findFirstByUserAndUsedFalse(user)
+                .findFirstByUser(user)
                 .orElseThrow(() -> new ApiException(ApiErrorCode.OTP_NOT_FOUND));
 
+        // Check otp is expired
         if(verificationOtp.getExpiresAt().isBefore((Instant.now()))) {
             throw new ApiException(ApiErrorCode.OTP_EXPIRED);
         }
 
+        // Check otp is equal to request.otp
         if(!verificationOtp.getOtp().equals(request.otp())) {
             throw new ApiException(ApiErrorCode.INVALID_OTP);
         }
 
+        // Update previous user data
         user.setEmailVerified(true);
 
         userRepository.save(user);

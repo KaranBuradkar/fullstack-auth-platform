@@ -114,6 +114,11 @@ public enum ApiErrorCode {
             "User email not found"
     ),
 
+    EMAIL_FAILED_TO_SEND(
+            HttpStatus.BAD_GATEWAY,
+            "Failed to send email"
+    ),
+
     PHONE_ALREADY_EXISTS(
             HttpStatus.CONFLICT,
             "An account with this phone number already exists"
