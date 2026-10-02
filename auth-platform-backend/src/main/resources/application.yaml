@@ -18,3 +18,8 @@ application:
     otp:
       seed: [OTP_GEN_SEED]
       otp-expiration: 300 # 5 min = 300 sec
+
+  email:
+    resend:
+      api-key: [API]
+      from-email: [RESEND_TESTING_EMAIL] #onboarding@resend.dev for RESEND
