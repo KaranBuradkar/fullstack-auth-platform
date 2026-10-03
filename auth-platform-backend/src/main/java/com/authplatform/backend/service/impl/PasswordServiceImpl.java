@@ -1,9 +1,12 @@
 package com.authplatform.backend.service.impl;
 
+import com.authplatform.backend.common.exception.ApiAuthenticationException;
 import com.authplatform.backend.common.exception.ApiException;
+import com.authplatform.backend.common.exception.BadRequestException;
 import com.authplatform.backend.common.response.ApiErrorCode;
 import com.authplatform.backend.common.service.email.EmailService;
 import com.authplatform.backend.config.OtpProperties;
+import com.authplatform.backend.dto.request.ChangePasswordRequest;
 import com.authplatform.backend.dto.request.ForgotPasswordRequest;
 import com.authplatform.backend.dto.request.ResetPasswordRequest;
 import com.authplatform.backend.entity.PasswordResetOtp;
@@ -11,7 +14,10 @@ import com.authplatform.backend.entity.User;
 import com.authplatform.backend.exception.UserNotFoundException;
 import com.authplatform.backend.repository.PasswordResetOtpRepository;
 import com.authplatform.backend.repository.UserRepository;
+import com.authplatform.backend.repository.UserTokenRepository;
 import com.authplatform.backend.service.PasswordService;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -26,18 +32,20 @@ public class PasswordServiceImpl implements PasswordService {
     private final OtpProperties otpProperties;
     private final PasswordEncoder passwordEncoder;
     private final EmailService emailService;
+    private final UserTokenRepository userTokenRepository;
 
     public PasswordServiceImpl(
             UserRepository userRepository,
             PasswordResetOtpRepository passwordResetOtpRepository,
             OtpProperties otpProperties, PasswordEncoder passwordEncoder,
-            EmailService emailService
+            EmailService emailService, UserTokenRepository userTokenRepository
     ) {
         this.userRepository = userRepository;
         this.passwordResetOtpRepository = passwordResetOtpRepository;
         this.otpProperties = otpProperties;
         this.passwordEncoder = passwordEncoder;
         this.emailService = emailService;
+        this.userTokenRepository = userTokenRepository;
     }
 
     @Transactional
@@ -84,5 +92,42 @@ public class PasswordServiceImpl implements PasswordService {
         userRepository.save(user);
 
         passwordResetOtpRepository.delete(resetOtp);
+    }
+
+    @Transactional
+    @Override
+    public void changePassword(ChangePasswordRequest request) {
+
+        // 1. Get current user
+        Authentication authentication = SecurityContextHolder.getContext()
+                .getAuthentication();
+        if (authentication == null) {
+            throw new ApiAuthenticationException(ApiErrorCode.UNAUTHORIZED);
+        }
+        String email = authentication.getName();
+
+        // 2. Find user
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(UserNotFoundException::new);
+
+        // 3. Verify current password
+        if(!passwordEncoder.matches(request.currentPassword(), user.getPassword())) {
+            throw new BadRequestException("Current password is incorrect");
+        }
+
+        // 4. Prevent using the same password
+        if(passwordEncoder.matches(request.newPassword(), user.getPassword())) {
+            throw new BadRequestException("New password must be different from current password");
+        }
+
+        // 5. Encode new password
+        String encodedPassword = passwordEncoder.encode(request.newPassword());
+
+        // 6. Update password
+        user.setPassword(encodedPassword);
+        userRepository.save(user);
+
+        // 7. Revoke existing token
+        userTokenRepository.revokeAllTokensByUserId(user.getId());
     }
 }
