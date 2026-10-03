@@ -10,6 +10,7 @@ import jakarta.validation.ConstraintViolationException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.security.core.AuthenticationException;
@@ -66,7 +67,15 @@ public class GlobalExceptionHandler {
 
         ApiErrorCode code = ex.getCode();
 
-        return buildErrorResponse(code, null);
+        return ResponseEntity.status(code.status())
+                .body(ApiResponse.error(
+                        code.status().value(),
+                        code.name(),
+                        ex.getMessage(),
+                        null,
+                        request.getRequestURI(),
+                        getRequestId()
+                ));
     }
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
