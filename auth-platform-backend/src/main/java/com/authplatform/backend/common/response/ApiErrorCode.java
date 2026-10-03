@@ -244,6 +244,11 @@ public enum ApiErrorCode {
             "The request timed out"
     ),
 
+    BAD_REQUEST(
+            HttpStatus.BAD_REQUEST,
+            "Bad request"
+    ),
+
     // =========================
     // DATABASE
     // =========================
