@@ -57,10 +57,17 @@ public class AuthServiceImpl implements AuthService {
     @Override
     public AuthResponse register(RegisterRequest request) {
 
+        log.atInfo()
+                .addKeyValue("event", "USER_REGISTRATION_STARTED")
+                .log("User registration started");
+
         // 1. Check if user already exist with same email
         User user = resolveUserByEmail(request.email());
         if (user != null && user.getEmail().equals(request.email())) {
-            log.debug("User already exist with {}", request.email());
+            log.atWarn()
+                    .addKeyValue("event", "USER_REGISTRATION_FAILED")
+                    .addKeyValue("reason", "EMAIL_ALREADY_EXISTS")
+                    .log("User registration rejected");
             throw new UserAlreadyExistsException();
         }
 
@@ -80,6 +87,11 @@ public class AuthServiceImpl implements AuthService {
         UserToken userToken = new UserToken(refreshToken, savedUser, expiryDate);
         UserToken saveUserToken = userTokenRepository.save(userToken);
 
+        log.atInfo()
+                .addKeyValue("event", "USER_REGISTRATION_SUCCESS")
+                .addKeyValue("userId", savedUser.getId())
+                .log("User registered successfully");
+
         return userMapper.toResponse(
                 savedUser,
                 accessToken,
@@ -91,6 +103,10 @@ public class AuthServiceImpl implements AuthService {
     @Transactional
     @Override
     public AuthResponse login(LoginRequest request) {
+
+        log.atInfo()
+                .addKeyValue("event", "USER_LOGIN_STARTED")
+                .log("User Login started");
 
         // 1. Request credentials create local(Temp) user and
         // authenticate by AuthenticationManager of UserDetailsAuthService(implemented)
@@ -129,6 +145,11 @@ public class AuthServiceImpl implements AuthService {
         userToken.setExpiryDate(expiryDate);
         userToken.setRevoked(false);
         UserToken saveUserToken = userTokenRepository.save(userToken);
+
+        log.atInfo()
+                .addKeyValue("event", "USER_LOGIN_SUCCESS")
+                .addKeyValue("userId", authenticUser.getId())
+                .log("User login successfully");
 
         return userMapper.toResponse(
                 authenticUser,

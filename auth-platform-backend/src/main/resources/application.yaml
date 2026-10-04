@@ -23,3 +23,18 @@ application:
     resend:
       api-key: [API]
       from-email: [RESEND_TESTING_EMAIL] #onboarding@resend.dev for RESEND
+
+logging:
+  structured:
+    format:
+      console: ecs
+      file: ecs
+
+  file:
+    name: logs/auth-platform.log
+
+  level:
+    root: INFO
+    com.authplatform: DEBUG
+    org.springframework: INFO
+    org.hibernate: WARN
