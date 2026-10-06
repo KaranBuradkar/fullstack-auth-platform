@@ -8,9 +8,10 @@ const Register = () => {
   const navigate = useNavigate();
 
   const [form, setForm] = useState({
-    username: "",
+    fullName: "",
     email: "",
     password: "",
+    provider: "LOCAL"
   });
 
   const [error, setError] = useState("");
@@ -52,9 +53,9 @@ const Register = () => {
       <form onSubmit={handleSubmit}>
         <input
           type="text"
-          name="username"
-          placeholder="Username"
-          value={form.username}
+          name="fullName"
+          placeholder="Full Name"
+          value={form.fullName}
           onChange={handleChange}
         />
 

@@ -8,8 +8,9 @@ const Login = () => {
   const navigate = useNavigate();
 
   const [form, setForm] = useState({
-    username: "",
+    email: "",
     password: "",
+    provider: "LOCAL"
   });
 
   const [error, setError] = useState("");
@@ -51,9 +52,9 @@ const Login = () => {
       <form onSubmit={handleSubmit}>
         <input
           type="text"
-          name="username"
-          placeholder="Username"
-          value={form.username}
+          name="email"
+          placeholder="Email"
+          value={form.email}
           onChange={handleChange}
         />
 
