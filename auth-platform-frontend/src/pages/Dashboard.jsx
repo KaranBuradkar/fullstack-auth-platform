@@ -12,14 +12,26 @@ const Dashboard = () => {
   };
 
   return (
-    <div>
-      <h1>Dashboard</h1>
+    <div className="min-h-screen flex items-center justify-center bg-gray-100 px-4">
+      <div className="w-full max-w-md rounded-2xl bg-white p-8 text-center shadow-lg">
 
-      <p>You are authenticated.</p>
+        <h1 className="mb-3 text-3xl font-bold text-gray-800">
+          Dashboard
+        </h1>
 
-      <button onClick={handleLogout}>
-        Logout
-      </button>
+        <p className="mb-6 text-gray-600">
+          You are authenticated.
+        </p>
+
+        <button
+          onClick={handleLogout}
+          className="w-full rounded-lg bg-red-600 px-4 py-3 font-semibold text-white 
+          transition hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-300"
+        >
+          Logout
+        </button>
+
+      </div>
     </div>
   );
 };
