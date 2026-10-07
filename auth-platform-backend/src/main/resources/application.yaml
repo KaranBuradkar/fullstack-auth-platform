@@ -24,6 +24,9 @@ application:
       api-key: [API]
       from-email: [RESEND_TESTING_EMAIL] #onboarding@resend.dev for RESEND
 
+  frontend:
+    url: [FRONTEND_URL]
+
 logging:
   structured:
     format:
