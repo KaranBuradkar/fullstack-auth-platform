@@ -107,6 +107,7 @@ public class JwtAuthFilter extends OncePerRequestFilter {
     private boolean shouldSkip(HttpServletRequest request) {
         String uri = request.getRequestURI();
         return uri.startsWith("/api/v1/auth/login") ||
-                uri.startsWith("/api/v1/auth/register");
+                uri.startsWith("/api/v1/auth/register") ||
+                        uri.startsWith("/api/v1/auth/refresh");
     }
 }

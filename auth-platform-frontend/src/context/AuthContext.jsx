@@ -1,5 +1,5 @@
 import { createContext, useContext, useState } from "react";
-import { loginUser, registerUser } from "../api/authApi";
+import { loginUser, registerUser, userRefreshToken } from "../api/authApi";
 import { TOKEN_KEYS } from "../config/authRoutes";
 
 const AuthContext = createContext(null);
@@ -39,6 +39,49 @@ export const AuthProvider = ({ children }) => {
     return await registerUser(userData);
   };
 
+  const refreshUserToken = async () => {
+    try {
+      const currentRefreshToken = localStorage.getItem(
+        TOKEN_KEYS.REFRESH_TOKEN
+      );
+
+      console.log("Got token");
+      
+
+      if (!currentRefreshToken) {
+        throw new Error("Refresh token not found");
+      }
+
+      const response = await userRefreshToken({
+        refreshToken: currentRefreshToken,
+      });
+
+      const newAccessToken = response.data.accessToken;
+      const newRefreshToken = response.data.refreshToken;
+
+      localStorage.setItem(
+        TOKEN_KEYS.ACCESS_TOKEN,
+        newAccessToken
+      );
+
+      localStorage.setItem(
+        TOKEN_KEYS.REFRESH_TOKEN,
+        newRefreshToken
+      );
+
+      setAccessToken(newAccessToken);
+      setRefreshToken(newRefreshToken);
+
+      console.log("Done token"+newRefreshToken);
+
+      return response;
+
+    } catch (error) {
+      logout();
+      throw error;
+    }
+  };
+
   const logout = () => {
     localStorage.removeItem(TOKEN_KEYS.ACCESS_TOKEN);
     localStorage.removeItem(TOKEN_KEYS.REFRESH_TOKEN);
@@ -57,6 +100,7 @@ export const AuthProvider = ({ children }) => {
         isAuthenticated,
         login,
         register,
+        refreshUserToken,
         logout,
       }}
     >
