@@ -35,3 +35,4 @@ build/
 
 # APP Properties
 application-dev.yaml
+application-prod.yaml

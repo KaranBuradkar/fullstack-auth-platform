@@ -163,6 +163,10 @@ public class AuthServiceImpl implements AuthService {
     @Override
     public UserTokenResponse refreshToken(String token) {
 
+        log.atInfo()
+                .addKeyValue("event", "USER_REFRESH_TOKEN")
+                .log("User Refresh token started");
+
         // 1. Verify userToken already exist
         UserToken userToken = verifyRefreshToken(token);
 
@@ -179,6 +183,10 @@ public class AuthServiceImpl implements AuthService {
         userToken.setExpiryDate(expiryDate);
         userToken.setRevoked(false);
         UserToken saveUserToken = userTokenRepository.save(userToken);
+
+        log.atInfo()
+                .addKeyValue("event", "USER_REFRESH_TOKEN")
+                .log("User Refresh token complete");
 
         return new UserTokenResponse(
                 accessToken,
