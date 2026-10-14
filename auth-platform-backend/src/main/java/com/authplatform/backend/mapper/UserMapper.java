@@ -2,6 +2,7 @@ package com.authplatform.backend.mapper;
 
 import com.authplatform.backend.dto.request.RegisterRequest;
 import com.authplatform.backend.dto.response.AuthResponse;
+import com.authplatform.backend.dto.response.UserProfileResponse;
 import com.authplatform.backend.entity.User;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
@@ -18,4 +19,6 @@ public interface UserMapper {
     @Mapping(source = "refreshToken", target = "refreshToken")
     @Mapping(source = "expiryDate", target = "expirationIn")
     AuthResponse toResponse(User user, String accessToken, String refreshToken, Instant expiryDate);
+
+    UserProfileResponse toProfileResponse(User user);
 }
