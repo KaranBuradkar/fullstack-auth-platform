@@ -1,5 +1,5 @@
 import { createContext, useContext, useState } from "react";
-import { loginUser, registerUser, userRefreshToken } from "../api/authApi";
+import { loginUser, registerUser, userRefreshToken, userLogout } from "../api/authApi";
 import { TOKEN_KEYS } from "../config/authRoutes";
 
 const AuthContext = createContext(null);
@@ -43,10 +43,7 @@ export const AuthProvider = ({ children }) => {
     try {
       const currentRefreshToken = localStorage.getItem(
         TOKEN_KEYS.REFRESH_TOKEN
-      );
-
-      console.log("Got token");
-      
+      );      
 
       if (!currentRefreshToken) {
         throw new Error("Refresh token not found");
@@ -72,8 +69,6 @@ export const AuthProvider = ({ children }) => {
       setAccessToken(newAccessToken);
       setRefreshToken(newRefreshToken);
 
-      console.log("Done token"+newRefreshToken);
-
       return response;
 
     } catch (error) {
@@ -82,12 +77,24 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
-  const logout = () => {
-    localStorage.removeItem(TOKEN_KEYS.ACCESS_TOKEN);
-    localStorage.removeItem(TOKEN_KEYS.REFRESH_TOKEN);
+  const logout = async () => {
 
-    setAccessToken(null);
-    setRefreshToken(null);
+    try {
+      const response = await userLogout();
+
+      if (response.success) {
+        localStorage.removeItem(TOKEN_KEYS.ACCESS_TOKEN);
+        localStorage.removeItem(TOKEN_KEYS.REFRESH_TOKEN);
+
+        setAccessToken(null);
+        setRefreshToken(null);
+      }
+
+      return response;
+    } catch(error) {
+      console.log("Failed to logout");
+
+    }
   };
 
   const isAuthenticated = Boolean(accessToken);
