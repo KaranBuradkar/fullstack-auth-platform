@@ -14,3 +14,8 @@ export const userRefreshToken = async (data) => {
     const response = await api.post("/auth/refresh", data);
     return response.data;
 }
+
+export const userLogout = async (data) => {
+    const response = await api.post("/auth/logout", data);
+    return response.data;
+}

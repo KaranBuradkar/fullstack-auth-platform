@@ -11,8 +11,6 @@ const Dashboard = () => {
     navigate(AUTH_ROUTES.LOGIN);
   };
   const handleRefreshToken = () => {
-    console.log("Refresh Btn clicked");
-    
     refreshUserToken();
   };
 
@@ -32,7 +30,7 @@ const Dashboard = () => {
           <button
             onClick={handleRefreshToken}
             className="w-full rounded-lg bg-red-600 px-4 py-3 font-semibold text-white 
-            transition hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-300"
+            transition hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-300 m-3"
           >
             Refresh Token
           </button>
@@ -40,7 +38,7 @@ const Dashboard = () => {
           <button
             onClick={handleLogout}
             className="w-full rounded-lg bg-red-600 px-4 py-3 font-semibold text-white 
-            transition hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-300"
+            transition hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-300 m-2"
           >
             Logout
           </button>
