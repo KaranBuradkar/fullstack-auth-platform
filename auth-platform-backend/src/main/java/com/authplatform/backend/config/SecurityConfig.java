@@ -11,6 +11,7 @@ import org.springframework.security.config.annotation.web.configurers.AbstractHt
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.servlet.HandlerExceptionResolver;
 
 @Configuration
@@ -20,24 +21,26 @@ public class SecurityConfig {
     private final RequestIdFilter requestIdFilter;
     private final RestAccessDeniedHandler restAccessDeniedHandler;
     private final RestAuthenticationEntryPoint restAuthenticationEntryPoint;
+    private final CorsConfigurationSource corsConfigurationSource;
 
     public SecurityConfig(
             HandlerExceptionResolver handlerExceptionResolver,
             RestAuthenticationEntryPoint restAuthenticationEntryPoint,
             RestAccessDeniedHandler restAccessDeniedHandler,
-            JwtAuthFilter jwtAuthFilter, RequestIdFilter requestIdFilter
+            JwtAuthFilter jwtAuthFilter, RequestIdFilter requestIdFilter, CorsConfigurationSource corsConfigurationSource
     ) {
         this.jwtAuthFilter = jwtAuthFilter;
         this.restAuthenticationEntryPoint = restAuthenticationEntryPoint;
         this.restAccessDeniedHandler = restAccessDeniedHandler;
         this.requestIdFilter = requestIdFilter;
+        this.corsConfigurationSource = corsConfigurationSource;
     }
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity httpSecurity) throws Exception {
         httpSecurity
                 .csrf(AbstractHttpConfigurer::disable)
-                .cors(cors -> {})
+                .cors(cors -> cors.configurationSource(corsConfigurationSource))
                 .sessionManagement(session
                         -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 // Request Validator
