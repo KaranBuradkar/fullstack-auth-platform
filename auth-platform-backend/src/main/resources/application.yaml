@@ -8,6 +8,10 @@ spring:
     password: [DB_PASSWORD]
     driver-class-name: com.mysql.cj.jdbc.Driver
 
+  jpa:
+    show-sql: false # true only in dev
+    hibernate.ddl-auto: update
+
 application:
   security:
     jwt:
