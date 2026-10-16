@@ -1,5 +1,5 @@
 import { createContext, useContext, useState } from "react";
-import { loginUser, registerUser, userRefreshToken, userLogout } from "../api/authApi";
+import { loginUser, registerUser, userRefreshToken, userLogout, changeUserPassword } from "../api/authApi";
 import { TOKEN_KEYS } from "../config/authRoutes";
 
 const AuthContext = createContext(null);
@@ -77,6 +77,10 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
+  const changePassword = async (userData) => {
+    return await changeUserPassword(userData);
+  };
+
   const logout = async () => {
 
     try {
@@ -94,6 +98,12 @@ export const AuthProvider = ({ children }) => {
     } catch(error) {
       console.log("Failed to logout");
 
+    } finally {
+      localStorage.removeItem(TOKEN_KEYS.ACCESS_TOKEN);
+      localStorage.removeItem(TOKEN_KEYS.REFRESH_TOKEN);
+
+      setAccessToken(null);
+      setRefreshToken(null);
     }
   };
 
@@ -108,6 +118,7 @@ export const AuthProvider = ({ children }) => {
         login,
         register,
         refreshUserToken,
+        changePassword,
         logout,
       }}
     >

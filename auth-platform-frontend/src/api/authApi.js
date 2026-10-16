@@ -19,3 +19,7 @@ export const userLogout = async (data) => {
     const response = await api.post("/auth/logout", data);
     return response.data;
 }
+export const changeUserPassword = async (data) => {
+    const response = await api.post("/auth/password/change", data);
+    return response.data;
+}
