@@ -1,7 +1,5 @@
 package com.authplatform.backend.config;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.web.cors.CorsConfiguration;
@@ -13,7 +11,6 @@ import java.util.List;
 @Configuration
 public class CorsConfig {
 
-    private static final Logger log = LoggerFactory.getLogger(CorsConfig.class);
     private final FrontendProperties frontendProperties;
 
     public CorsConfig(FrontendProperties frontendProperties) {
@@ -28,8 +25,6 @@ public class CorsConfig {
         configuration.setAllowedOrigins(List.of(
                 frontendProperties.url()
         ));
-
-        log.info(frontendProperties.url());
 
         configuration.setAllowedMethods(List.of(
                 "GET",

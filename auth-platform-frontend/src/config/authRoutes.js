@@ -1,7 +1,8 @@
 export const AUTH_ROUTES = {
     LOGIN: "/login",
     REGISTER: "/register",
-    DASHBOARD: "/dashboard"
+    DASHBOARD: "/dashboard",
+    CHANGE_PASSWORD: "/change-password"
 };
 
 export const TOKEN_KEYS = {
