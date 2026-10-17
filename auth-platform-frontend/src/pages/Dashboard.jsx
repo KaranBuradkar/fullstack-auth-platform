@@ -14,6 +14,9 @@ const Dashboard = () => {
     const handleRefreshToken = async () => {
         try {
             await refreshUserToken();
+            const response = await fetchUserProfile();
+            console.log("User Profile: ",response);
+            
         } catch (error) {
             console.error("Refresh token failed:", error);
         }
@@ -22,6 +25,10 @@ const Dashboard = () => {
     const handleChangePassword = () => {
         navigate(AUTH_ROUTES.CHANGE_PASSWORD);
     };
+
+    const handleUserProfile = () => {
+        navigate(AUTH_ROUTES.USER_PROFILE);
+    }
 
     return (
         <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 px-4 py-10">
@@ -85,6 +92,57 @@ const Dashboard = () => {
                         </h2>
 
                         <div className="space-y-3">
+
+                            {/* User Profile */}
+                            <button
+                                type="button"
+                                onClick={handleUserProfile}
+                                className="group flex w-full items-center gap-4 rounded-xl border border-slate-200 bg-white p-4 text-left transition duration-200 hover:border-blue-200 hover:bg-blue-50 focus:outline-none focus:ring-4 focus:ring-blue-500/10"
+                            >
+                                <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-blue-100 text-blue-600 transition group-hover:bg-blue-600 group-hover:text-white">
+
+                                    <svg
+                                        xmlns="http://www.w3.org/2001/svg"
+                                        fill="none"
+                                        viewBox="0 0 24 24"
+                                        strokeWidth={1.8}
+                                        stroke="currentColor"
+                                        className="h-5 w-5"
+                                    >
+                                        <path
+                                            strokeLinecap="round"
+                                            strokeLinejoin="round"
+                                            d="M16.023 9.348h4.992V4.356M20.5 9.5A8.25 8.25 0 0 0 5.02 6.27M7.977 14.652H2.985v4.992M3.5 14.5a8.25 8.25 0 0 0 15.48 3.23"
+                                        />
+                                    </svg>
+
+                                </div>
+
+                                <div className="min-w-0 flex-1">
+                                    <p className="font-semibold text-slate-800">
+                                        User Profile
+                                    </p>
+
+                                    <p className="mt-1 text-xs text-slate-500">
+                                        See your profile
+                                    </p>
+                                </div>
+
+                                <svg
+                                    xmlns="http://www.w3.org/2000/svg"
+                                    fill="none"
+                                    viewBox="0 0 24 24"
+                                    strokeWidth={1.8}
+                                    stroke="currentColor"
+                                    className="h-5 w-5 shrink-0 text-slate-400 transition group-hover:translate-x-1 group-hover:text-blue-600"
+                                >
+                                    <path
+                                        strokeLinecap="round"
+                                        strokeLinejoin="round"
+                                        d="M5 12h14m-7-7 7 7-7 7"
+                                    />
+                                </svg>
+                            </button>
 
                             {/* Refresh Token */}
                             <button
@@ -256,6 +314,32 @@ const Dashboard = () => {
                 </p>
 
             </div>
+        </div>
+    );
+};
+
+const ProfileField = ({ label, value, badge }) => {
+    return (
+        <div className="flex flex-col gap-1 px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
+            <span className="text-sm text-slate-500">
+                {label}
+            </span>
+
+            {badge !== undefined ? (
+                <span
+                    className={`inline-flex w-fit rounded-full px-2.5 py-1 text-xs font-semibold ${
+                        badge
+                            ? "bg-emerald-100 text-emerald-700"
+                            : "bg-amber-100 text-amber-700"
+                    }`}
+                >
+                    {value ?? "Unknown"}
+                </span>
+            ) : (
+                <span className="break-all text-sm font-medium text-slate-800 sm:text-right">
+                    {value ?? "Not available"}
+                </span>
+            )}
         </div>
     );
 };
