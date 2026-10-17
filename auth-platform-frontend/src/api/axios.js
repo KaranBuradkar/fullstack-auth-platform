@@ -1,5 +1,6 @@
 import axios from "axios";
 import { TOKEN_KEYS } from "../config/authRoutes";
+import { useAuth } from "../context/AuthContext";
 
 const api = axios.create({
   baseURL: import.meta.env.VITE_BACKEND_API_BASE_URL,

@@ -7,6 +7,8 @@ import ChangePassword from "../pages/auth/ChangePassword";
 
 import { useAuth } from "../context/AuthContext";
 import { AUTH_ROUTES } from "../config/authRoutes";
+import { UserProvider } from "../context/UserContext";
+import UserProfile from "../pages/UserProfile";
 
 const ProtectedRoute = ({ children }) => {
   const { isAuthenticated } = useAuth();
@@ -53,8 +55,19 @@ const AppRoutes = () => {
         path={AUTH_ROUTES.DASHBOARD}
         element={
           <ProtectedRoute>
-            <Dashboard />
-          </ProtectedRoute>
+              <Dashboard />
+            </ProtectedRoute>
+        }
+      />
+
+      <Route
+        path={AUTH_ROUTES.USER_PROFILE}
+        element={
+          <UserProvider>
+            <ProtectedRoute>
+              <UserProfile />
+            </ProtectedRoute>
+          </UserProvider>
         }
       />
 
