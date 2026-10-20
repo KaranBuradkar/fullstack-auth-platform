@@ -1,10 +1,13 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { useAuth } from "../../context/AuthContext";
-import { AUTH_ROUTES } from "../../config/authRoutes";
+
+import { useAuth } from "../../hooks/useAuth";
+import { APP_ROUTES } from "../../config/AppRouteEndpoints";
+import { authService } from "../../services/authService";
+import { tokenStorage } from "../../utils/storage";
 
 const Register = () => {
-  const { register } = useAuth();
+  const { accessToken, setAccessToken, refreshToken, setRefreshToken } = useAuth();
   const navigate = useNavigate();
 
   const [form, setForm] = useState({
@@ -24,6 +27,7 @@ const Register = () => {
     });
   };
 
+  // Handle register new account
   const handleSubmit = async (e) => {
     e.preventDefault();
 
@@ -31,14 +35,31 @@ const Register = () => {
     setLoading(true);
 
     try {
-      await register(form);
+      // User Registration
+      const response = await authService.register(form);
 
-      navigate(AUTH_ROUTES.LOGIN);
+      if(!response.success) {
+        throw new Error("");
+      }
+
+      const accessToken = response.data.accessToken;
+      const refreshToken = response.data.refreshToken;
+
+      tokenStorage.setAccessToken(accessToken);
+      tokenStorage.setRefreshToken(refreshToken);
+
+      setAccessToken(accessToken);
+      setRefreshToken(refreshToken);
+
+      navigate(APP_ROUTES.USER.DASHBOARD);
     } catch (error) {
-      setError(
-        error.response?.data?.message ||
-        "Registration failed"
-      );
+      // Handle api error response only
+      if(error.response?.data) {
+        setError(error.response?.data?.message || "Login failed");
+      } 
+      // Other error 
+      else throw new Error("Frontend logic breaks!!");
+      
     } finally {
       setLoading(false);
     }
@@ -101,7 +122,7 @@ const Register = () => {
         <p className="mt-6 text-center text-sm text-gray-600">
           Already have an account?{" "}
           <Link
-            to={AUTH_ROUTES.LOGIN}
+            to={APP_ROUTES.AUTH.LOGIN}
             className="font-semibold text-blue-600 hover:text-blue-700 hover:underline"
           >
             Login

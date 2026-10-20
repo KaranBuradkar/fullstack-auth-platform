@@ -1,37 +1,78 @@
 import { useNavigate } from "react-router-dom";
-import { useAuth } from "../context/AuthContext";
-import { AUTH_ROUTES } from "../config/authRoutes";
+
+import { authService } from "../services/authService";
+import { APP_ROUTES } from "../config/AppRouteEndpoints";
+import { tokenStorage } from "../utils/storage";
+import { useAuth } from "../hooks/useAuth";
 
 const Dashboard = () => {
-    const { logout, refreshUserToken } = useAuth();
+    const { accessToken, refreshToken, setAccessToken, setRefreshToken } = useAuth();
     const navigate = useNavigate();
 
-    const handleLogout = () => {
-        logout();
-        navigate(AUTH_ROUTES.LOGIN);
+    // Handle logout operation
+    const handleLogout = async () => {
+        // User Logout
+        try {
+            const response = await authService.logout();
+            
+            if (!response.success) {
+                throw new Error("Failed to mark refresh token invalid");
+            }
+
+            navigate(APP_ROUTES.AUTH.LOGIN);    
+        } catch(error) {
+            console.log("Failed to logout");
+        } finally {
+            tokenStorage.clear();
+    
+            setAccessToken(null);
+            setRefreshToken(null);
+    
+            console.log("User tokens clear successfully from browser!");
+        }
     };
 
     const handleRefreshToken = async () => {
+        
         try {
-            await refreshUserToken();
-            const response = await fetchUserProfile();
-            console.log("User Profile: ",response);
-            
+            const currentRefreshToken = tokenStorage.getRefreshToken();      
+        
+            if (!currentRefreshToken) {
+                console.log("Refresh token is not available");
+                throw new Error("Refresh token not found");
+            }
+    
+            const response = await authService.refreshToken({
+                refreshToken: currentRefreshToken,
+            });
+    
+            console.log("API Response: ", response.message);
+
+            const newAccessToken = response.data.accessToken;
+            const newRefreshToken = response.data.refreshToken;
+    
+            tokenStorage.setAccessToken(newAccessToken);
+            tokenStorage.setRefreshToken(newRefreshToken);
+    
+            setAccessToken(newAccessToken);
+            setRefreshToken(newRefreshToken);
+
         } catch (error) {
-            console.error("Refresh token failed:", error);
+            console.error("Refresh token failed: ", error);
+            handleLogout();
         }
     };
 
     const handleChangePassword = () => {
-        navigate(AUTH_ROUTES.CHANGE_PASSWORD);
+        navigate(APP_ROUTES.AUTH.CHANGE_PASSWORD);
     };
 
     const handleUserProfile = () => {
-        navigate(AUTH_ROUTES.USER_PROFILE);
+        navigate(APP_ROUTES.USER.PROFILE);
     }
 
     return (
-        <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 px-4 py-10">
+        <div className="flex min-h-screen items-center justify-center bg-linear-to-br from-slate-50 via-blue-50 to-indigo-100 px-4 py-10">
 
             <div className="w-full max-w-md">
 

@@ -1,20 +1,26 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { useAuth } from "../../context/AuthContext";
-import { AUTH_ROUTES } from "../../config/authRoutes";
+
+import { useAuth } from "../../hooks/useAuth";
+import { authService } from "../../services/authService";
+import { useUser } from "../../hooks/useUser";
+import { APP_ROUTES } from "../../config/AppRouteEndpoints";
+import { tokenStorage } from "../../utils/storage";
 
 const Login = () => {
-  const { login } = useAuth();
+
+  const { accessToken, refreshToken, setAccessToken, setRefreshToken } = useAuth();
+  const { user, setUser } = useUser();
   const navigate = useNavigate();
+
+  const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
 
   const [form, setForm] = useState({
     email: "",
     password: "",
     provider: "LOCAL"
   });
-
-  const [error, setError] = useState("");
-  const [loading, setLoading] = useState(false);
 
   const handleChange = (e) => {
     setForm({
@@ -23,6 +29,7 @@ const Login = () => {
     });
   };
 
+  // Handle login user
   const handleSubmit = async (e) => {
     e.preventDefault();
 
@@ -30,14 +37,27 @@ const Login = () => {
     setLoading(true);
 
     try {
-      await login(form);
+      const response = await authService.login(form);
 
-      navigate(AUTH_ROUTES.DASHBOARD);
+      if(!response.success) {
+        throw new Error("");
+      }
+      
+      const accessToken = response.data.accessToken;
+      const refreshToken = response.data.refreshToken;
+
+      tokenStorage.setAccessToken(accessToken);
+      tokenStorage.setRefreshToken(refreshToken);
+
+      setAccessToken(accessToken);
+      setRefreshToken(refreshToken);
+
+      navigate(APP_ROUTES.USER.DASHBOARD);
     } catch (error) {
-      setError(
-        error.response?.data?.message ||
-        "Login failed"
-      );
+
+      const data = error.response?.data || error;
+            
+      setError(data?.message || "Login failed");
     } finally {
       setLoading(false);
     }
@@ -91,7 +111,7 @@ const Login = () => {
         <p className="mt-6 text-center text-sm text-gray-600">
           Don't have an account?{" "}
           <Link
-            to={AUTH_ROUTES.REGISTER}
+            to={APP_ROUTES.AUTH.REGISTER}
             className="font-semibold text-blue-600 hover:text-blue-700 hover:underline"
           >
             Register

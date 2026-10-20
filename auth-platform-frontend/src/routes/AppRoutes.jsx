@@ -1,12 +1,14 @@
 import { Routes, Route, Navigate } from "react-router-dom";
 
-import Login from "../pages/auth//Login";
-import Register from "../pages/auth//Register";
+import Login from "../pages/auth/Login";
+import Register from "../pages/auth/Register";
 import Dashboard from "../pages/Dashboard";
 import ChangePassword from "../pages/auth/ChangePassword";
 
-import { useAuth } from "../context/AuthContext";
-import { AUTH_ROUTES } from "../config/authRoutes";
+// import { Login, Register, ChangePassword } from '../pages/auth/authPages';
+
+import { useAuth } from "../hooks/useAuth";
+import { APP_ROUTES } from "../config/AppRouteEndpoints";
 import { UserProvider } from "../context/UserContext";
 import UserProfile from "../pages/UserProfile";
 
@@ -14,7 +16,7 @@ const ProtectedRoute = ({ children }) => {
   const { isAuthenticated } = useAuth();
 
   if (!isAuthenticated) {
-    return <Navigate to={AUTH_ROUTES.LOGIN} replace />;
+    return <Navigate to={APP_ROUTES.AUTH.LOGIN} replace />;
   }
 
   return children;
@@ -24,7 +26,7 @@ const PublicRoute = ({ children }) => {
   const { isAuthenticated } = useAuth();
 
   if (isAuthenticated) {
-    return <Navigate to={AUTH_ROUTES.DASHBOARD} replace />;
+    return <Navigate to={APP_ROUTES.USER.DASHBOARD} replace />;
   }
 
   return children;
@@ -32,9 +34,10 @@ const PublicRoute = ({ children }) => {
 
 const AppRoutes = () => {
   return (
+    <UserProvider>
     <Routes>
       <Route
-        path={AUTH_ROUTES.LOGIN}
+        path={APP_ROUTES.AUTH.LOGIN}
         element={
           <PublicRoute>
             <Login />
@@ -43,7 +46,7 @@ const AppRoutes = () => {
       />
 
       <Route
-        path={AUTH_ROUTES.REGISTER}
+        path={APP_ROUTES.AUTH.REGISTER}
         element={
           <PublicRoute>
             <Register />
@@ -52,7 +55,7 @@ const AppRoutes = () => {
       />
 
       <Route
-        path={AUTH_ROUTES.DASHBOARD}
+        path={APP_ROUTES.USER.DASHBOARD}
         element={
           <ProtectedRoute>
               <Dashboard />
@@ -61,18 +64,16 @@ const AppRoutes = () => {
       />
 
       <Route
-        path={AUTH_ROUTES.USER_PROFILE}
+        path={APP_ROUTES.USER.PROFILE}
         element={
-          <UserProvider>
-            <ProtectedRoute>
-              <UserProfile />
-            </ProtectedRoute>
-          </UserProvider>
+          <ProtectedRoute>
+            <UserProfile />
+          </ProtectedRoute>
         }
       />
 
       <Route
-        path={AUTH_ROUTES.CHANGE_PASSWORD}
+        path={APP_ROUTES.AUTH.CHANGE_PASSWORD}
         element={
           <ProtectedRoute>
             <ChangePassword />
@@ -82,9 +83,10 @@ const AppRoutes = () => {
 
       <Route
         path="*"
-        element={<Navigate to={AUTH_ROUTES.LOGIN} replace />}
+        element={<Navigate to={APP_ROUTES.AUTH.LOGIN} replace />}
       />
     </Routes>
+    </UserProvider>
   );
 };
 

@@ -1,7 +1,9 @@
-import { useNavigate } from "react-router-dom";
-import { useAuth } from "../../context/AuthContext";
 import { useState } from "react";
-import { AUTH_ROUTES } from "../../config/authRoutes";
+import { useNavigate } from "react-router-dom";
+
+import { authService } from "../../services/authService";
+import { useAuth } from "../../hooks/useAuth";
+import { APP_ROUTES } from "../../config/AppRouteEndpoints";
 
 const ChangePassword = () => {
     const { changePassword } = useAuth();
@@ -31,13 +33,17 @@ const ChangePassword = () => {
         setError("");
 
         try {
-            const response = await changePassword(form);
-
+            // Change Password
+            const response = await authService.changePassword(form);
+            
             if (response?.success) {
-                navigate(AUTH_ROUTES.DASHBOARD);
+                console.log("Change password response: ", response.message);
+                
+                navigate(APP_ROUTES.USER.DASHBOARD);
             } else {
                 setError(response?.message || "Unable to change password.");
             }
+        
         } catch (error) {
             setError(
                 error?.response?.data?.message ||
@@ -52,7 +58,7 @@ const ChangePassword = () => {
     };
 
     return (
-        <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 px-4 py-10">
+        <div className="flex min-h-screen items-center justify-center bg-linear-to-br from-slate-50 via-blue-50 to-indigo-100 px-4 py-10">
 
             <div className="w-full max-w-md">
 

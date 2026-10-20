@@ -1,132 +1,31 @@
 import { createContext, useContext, useState } from "react";
-import { loginUser, registerUser, userRefreshToken, userLogout, changeUserPassword } from "../api/authApi";
-import { TOKEN_KEYS } from "../config/authRoutes";
 
-const AuthContext = createContext(null);
+import { authService } from "../services/authService";
+import { tokenStorage } from '../utils/storage';
 
+// Define shared states and functions for updating it
+export const AuthContext = createContext(null);
+
+// Makes the context values available to descendant components
 export const AuthProvider = ({ children }) => {
-  const [accessToken, setAccessToken] = useState(
-    localStorage.getItem(TOKEN_KEYS.ACCESS_TOKEN)
-  );
 
-  const [refreshToken, setRefreshToken] = useState(
-    localStorage.getItem(TOKEN_KEYS.REFRESH_TOKEN)
-  );
+  const [accessToken, setAccessToken] = useState(tokenStorage.getAccessToken() || null);
 
-  const login = async (credentials) => {
-    const response = await loginUser(credentials);
-
-    const accessToken = response.data.accessToken;
-    const refreshToken = response.data.refreshToken;
-
-    localStorage.setItem(
-      TOKEN_KEYS.ACCESS_TOKEN,
-      accessToken
-    );
-
-    localStorage.setItem(
-      TOKEN_KEYS.REFRESH_TOKEN,
-      refreshToken
-    );
-
-    setAccessToken(accessToken);
-    setRefreshToken(refreshToken);
-
-    return response;
-  };
-
-  const register = async (userData) => {
-    return await registerUser(userData);
-  };
-
-  const refreshUserToken = async () => {
-    try {
-      const currentRefreshToken = localStorage.getItem(
-        TOKEN_KEYS.REFRESH_TOKEN
-      );      
-
-      if (!currentRefreshToken) {
-        throw new Error("Refresh token not found");
-      }
-
-      const response = await userRefreshToken({
-        refreshToken: currentRefreshToken,
-      });
-
-      const newAccessToken = response.data.accessToken;
-      const newRefreshToken = response.data.refreshToken;
-
-      localStorage.setItem(
-        TOKEN_KEYS.ACCESS_TOKEN,
-        newAccessToken
-      );
-
-      localStorage.setItem(
-        TOKEN_KEYS.REFRESH_TOKEN,
-        newRefreshToken
-      );
-
-      setAccessToken(newAccessToken);
-      setRefreshToken(newRefreshToken);
-
-      return response;
-
-    } catch (error) {
-      logout();
-      throw error;
-    }
-  };
-
-  const changePassword = async (userData) => {
-    return await changeUserPassword(userData);
-  };
-
-  const logout = async () => {
-
-    try {
-      const response = await userLogout();
-
-      if (response.success) {
-        localStorage.removeItem(TOKEN_KEYS.ACCESS_TOKEN);
-        localStorage.removeItem(TOKEN_KEYS.REFRESH_TOKEN);
-
-        setAccessToken(null);
-        setRefreshToken(null);
-      }
-
-      return response;
-    } catch(error) {
-      console.log("Failed to logout");
-
-    } finally {
-      localStorage.removeItem(TOKEN_KEYS.ACCESS_TOKEN);
-      localStorage.removeItem(TOKEN_KEYS.REFRESH_TOKEN);
-
-      setAccessToken(null);
-      setRefreshToken(null);
-    }
-  };
+  const [refreshToken, setRefreshToken] = useState(tokenStorage.getRefreshToken() || null);
 
   const isAuthenticated = Boolean(accessToken);
 
+  const value = {
+    accessToken, setAccessToken,
+    refreshToken, setRefreshToken,
+    isAuthenticated
+  }
+
   return (
     <AuthContext.Provider
-      value={{
-        accessToken,
-        refreshToken,
-        isAuthenticated,
-        login,
-        register,
-        refreshUserToken,
-        changePassword,
-        logout,
-      }}
+      value={value}
     >
       {children}
     </AuthContext.Provider>
   );
-};
-
-export const useAuth = () => {
-  return useContext(AuthContext);
 };
