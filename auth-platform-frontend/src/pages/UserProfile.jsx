@@ -1,29 +1,54 @@
 import { useEffect, useState } from "react";
-import { useUser } from '../context/UserContext';
+
+import { userService } from '../services/userService';
 
 const UserProfile = () => {
-
-    const { fetchUserProfile } = useUser();
 
     const [user, setUser] = useState(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState("");
 
     useEffect(() => {
+        let ignore = false;
+
         const loadProfile = async () => {
             try {
-                const response = await fetchUserProfile();
-                setUser(response.data);
+                setLoading(true);
+                setError("");
 
+                const response = await userService.userDetails();
+
+                if (ignore) return;
+
+                if (response.success) {
+                    setUser(response.data);
+                } else {
+                    setError(
+                        response.message || "Failed to fetch user profile"
+                    );
+                }
             } catch (error) {
-                setError(error.response?.data?.message || "Unable to load user profile.");
+                if (ignore) return;
+
+                setError(
+                    error.response?.data?.message ||
+                    "Failed to fetch user profile"
+                );
+
+                console.error("Profile request failed:", error);
             } finally {
-                setLoading(false);
+                if (!ignore) {
+                    setLoading(false);
+                }
             }
         };
 
         loadProfile();
-    }, [fetchUserProfile]);
+
+        return () => {
+            ignore = true;
+        };
+    }, []);
 
     return (
         <div>
@@ -56,7 +81,7 @@ const UserProfile = () => {
                             )}
 
                             <div className="min-w-0">
-                                <h3 className="break-words text-lg font-bold text-slate-900">
+                                <h3 className="wrap-break-word text-lg font-bold text-slate-900">
                                     {user.fullName || "Name not available"}
                                 </h3>
 

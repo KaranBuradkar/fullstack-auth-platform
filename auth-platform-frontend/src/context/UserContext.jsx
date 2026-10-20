@@ -1,38 +1,20 @@
-import { createContext, useContext } from "react";
-import { fetchUser } from '../api/userApi';
+import { createContext, useState } from "react";
 
-const UserContext = createContext(null);
+export const UserContext = createContext(null);
 
 export const UserProvider = ({ children }) => {
 
-    const fetchUserProfile = async () => {
-        try {
-            const response = await fetchUser();
-            if(response.success) console.log("Fetch User Profile Successfully");
-            return response;
-        } catch(error) {
-            console.log("Failed to fetch user profile: ", error.response?.data || error.message);
-            throw error;
-        }
+    const [user, setUser] = useState(null);
+
+    const value = {
+        user, setUser,
     };
 
     return (
         <UserContext.Provider
-            value={{
-                fetchUserProfile
-            }}
+            value={value}
         >
             {children}
         </UserContext.Provider>
   );
 };
-
-export const useUser = () => {
-    const context = useContext(UserContext);
-
-    if(!context) {
-        throw new Error("useUser must be used within a UserProvider");
-    }
-
-    return context;
-}

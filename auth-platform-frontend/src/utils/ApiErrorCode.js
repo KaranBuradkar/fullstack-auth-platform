@@ -1,0 +1,4 @@
+
+export const API_ERROR_CODE = {
+    INVALID_TOKEN: "INVALID_TOKEN"
+};
