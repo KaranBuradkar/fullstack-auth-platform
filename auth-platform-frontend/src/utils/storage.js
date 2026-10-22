@@ -20,6 +20,14 @@ export const tokenStorage = {
     localStorage.setItem(TOKEN_KEYS.REFRESH_TOKEN, token);
   },
 
+  getRefreshToken() {
+    return localStorage.getItem(TOKEN_KEYS.REFRESH_TOKEN);
+  },
+
+  setRefreshToken(token) {
+    localStorage.setItem(TOKEN_KEYS.REFRESH_TOKEN, token);
+  },
+
   clear() {
     localStorage.removeItem(TOKEN_KEYS.ACCESS_TOKEN);
     localStorage.removeItem(TOKEN_KEYS.REFRESH_TOKEN);
