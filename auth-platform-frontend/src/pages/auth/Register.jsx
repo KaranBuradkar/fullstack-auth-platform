@@ -2,12 +2,15 @@ import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 
 import { useAuth } from "../../hooks/useAuth";
+import { useUser } from "../../hooks/useUser";
 import { APP_ROUTES } from "../../config/AppRouteEndpoints";
 import { authService } from "../../services/authService";
 import { tokenStorage } from "../../utils/storage";
+import { tokenSessionStorage } from "../../utils/SessionStorage";
 
 const Register = () => {
   const { accessToken, setAccessToken, refreshToken, setRefreshToken } = useAuth();
+  const { user, setUser } = useUser();
   const navigate = useNavigate();
 
   const [form, setForm] = useState({
@@ -44,6 +47,7 @@ const Register = () => {
 
       const accessToken = response.data.accessToken;
       const refreshToken = response.data.refreshToken;
+      const email = response.data.email;
 
       tokenStorage.setAccessToken(accessToken);
       tokenStorage.setRefreshToken(refreshToken);
@@ -51,11 +55,27 @@ const Register = () => {
       setAccessToken(accessToken);
       setRefreshToken(refreshToken);
 
-      navigate(APP_ROUTES.USER.DASHBOARD);
+      // User details
+      const data = {
+        id: response.data.id,
+        fullName: response.data.fullName,
+        email: response.data.email,
+        emailVerified: response.data.emailVerified,
+        role: response.data.role
+      };
+
+      // Save session for do not loss for verification
+      tokenSessionStorage.saveUserEmail(data.email);
+      // save in user context
+      setUser(data);
+
+      // Navigate to verify email
+      navigate(APP_ROUTES.AUTH.VERIFY_EMAIL);
+
     } catch (error) {
       // Handle api error response only
       if(error.response?.data) {
-        setError(error.response?.data?.message || "Login failed");
+        setError(error.response?.data?.message || "Register failed");
       } 
       // Other error 
       else throw new Error("Frontend logic breaks!!");

@@ -6,6 +6,7 @@ import { authService } from "../../services/authService";
 import { useUser } from "../../hooks/useUser";
 import { APP_ROUTES } from "../../config/AppRouteEndpoints";
 import { tokenStorage } from "../../utils/storage";
+import { tokenSessionStorage } from "../../utils/SessionStorage";
 
 const Login = () => {
 
@@ -40,7 +41,7 @@ const Login = () => {
       const response = await authService.login(form);
 
       if(!response.success) {
-        throw new Error("");
+        throw new Error("Failed to login user");
       }
       
       const accessToken = response.data.accessToken;
@@ -52,11 +53,30 @@ const Login = () => {
       setAccessToken(accessToken);
       setRefreshToken(refreshToken);
 
-      navigate(APP_ROUTES.USER.DASHBOARD);
+      // If account already verified then open Dashboard
+      if(response.data.emailVerified) {
+        navigate(APP_ROUTES.USER.DASHBOARD);
+        return;
+      }
+      
+      // User details
+      const data = {
+        id: response.data.id,
+        fullName: response.data.fullName,
+        email: response.data.email,
+        emailVerified: response.data.emailVerified,
+        role: response.data.role
+      }
+      // Save session for do not loss for verification
+      tokenSessionStorage.saveUserEmail(data.email);
+      // save in user context
+      setUser(data);
+      // Navigate to verify email
+      navigate(APP_ROUTES.AUTH.VERIFY_EMAIL);
+
     } catch (error) {
 
       const data = error.response?.data || error;
-            
       setError(data?.message || "Login failed");
     } finally {
       setLoading(false);

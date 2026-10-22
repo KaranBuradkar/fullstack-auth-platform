@@ -40,4 +40,10 @@ export const authService = {
         const response = await axiosClient.post(API_ENDPOINTSTES.AUTH.SEND_EMAIL_OTP, payload);
         return response.data;
     },
+
+    // Send OTP on email address
+    async verifyEmailOTP(payload) {
+        const response = await axiosClient.post(API_ENDPOINTSTES.AUTH.VERIFY_EMAIL_OTP, payload);
+        return response.data;
+    },
 }
