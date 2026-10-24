@@ -4,6 +4,7 @@ import com.authplatform.backend.common.filter.RequestIdFilter;
 import com.authplatform.backend.security.JwtAuthFilter;
 import com.authplatform.backend.security.RestAccessDeniedHandler;
 import com.authplatform.backend.security.RestAuthenticationEntryPoint;
+import com.authplatform.backend.security.SecurityEndpoints;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -45,7 +46,7 @@ public class SecurityConfig {
                         -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 // Request Validator
                 .authorizeHttpRequests(req -> {
-                    req.requestMatchers(shouldSkipUrl())
+                    req.requestMatchers(SecurityEndpoints.PUBLIC_URL_PATTERNS)
                             .permitAll()
                             .anyRequest().authenticated();
                 })
@@ -61,13 +62,5 @@ public class SecurityConfig {
                 );
 
         return httpSecurity.build();
-    }
-
-    private String[] shouldSkipUrl() {
-        return new String[]{
-                "/api/v1/auth/register/**",
-                "/api/v1/auth/login/**",
-                "/api/v1/auth/refresh"
-        };
     }
 }
