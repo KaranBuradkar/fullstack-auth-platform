@@ -43,7 +43,8 @@ public class JwtAuthFilter extends OncePerRequestFilter {
 
         try {
             // 1. Skip if user already authenticated or request for public apis
-            if (shouldSkip(request) || SecurityContextHolder.getContext().getAuthentication() != null) {
+            if (SecurityEndpoints.shouldSkipJwt(request.getServletPath())
+                    || SecurityContextHolder.getContext().getAuthentication() != null) {
                 filterChain.doFilter(request, response);
                 return;
             }
@@ -72,9 +73,21 @@ public class JwtAuthFilter extends OncePerRequestFilter {
             // 5. Fetch user from repository ( Database )
             User user = userRepository.findByEmail(email)
                     .orElseThrow(() -> new ApiAuthenticationException(ApiErrorCode.USER_NOT_FOUND));
+
+            // 6. Reject access if email is not verified
+            if (!user.isEmailVerified()
+                    && !SecurityEndpoints.canAccessWithoutVerifiedEmail(
+                    request.getServletPath())) {
+
+                log.warn("Unverified email attempted to access protected API");
+
+                throw new ApiAuthenticationException(
+                        ApiErrorCode.EMAIL_NOT_VERIFIED
+                );
+            }
             Collection<? extends GrantedAuthority> authorities = user.getAuthorities();
 
-            // 6. Set user is authenticated
+            // 7. Set user is authenticated
             UsernamePasswordAuthenticationToken authenticationToken
                     = new UsernamePasswordAuthenticationToken(user, null, authorities);
             SecurityContextHolder.getContext().setAuthentication(authenticationToken);
@@ -92,8 +105,14 @@ public class JwtAuthFilter extends OncePerRequestFilter {
             );
         }
 
-        // 7. Continue filters
+        // 8. Continue filters
         filterChain.doFilter(request, response);
+    }
+
+    private boolean canSkip(HttpServletRequest request) {
+        String uri = request.getRequestURI();
+        return uri.startsWith("/api/v1/auth/otp/email/send") ||
+                uri.startsWith("/api/v1/auth/otp/email/verify");
     }
 
     private String extractToken(HttpServletRequest request) {
@@ -102,12 +121,5 @@ public class JwtAuthFilter extends OncePerRequestFilter {
             return header.substring(7);
         }
         return null;
-    }
-
-    private boolean shouldSkip(HttpServletRequest request) {
-        String uri = request.getRequestURI();
-        return uri.startsWith("/api/v1/auth/login") ||
-                uri.startsWith("/api/v1/auth/register") ||
-                        uri.startsWith("/api/v1/auth/refresh");
     }
 }

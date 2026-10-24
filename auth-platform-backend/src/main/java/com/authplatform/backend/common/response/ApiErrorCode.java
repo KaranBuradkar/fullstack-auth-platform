@@ -109,6 +109,11 @@ public enum ApiErrorCode {
             "An account with this email already verified"
     ),
 
+    EMAIL_NOT_VERIFIED(
+            HttpStatus.CONFLICT,
+            "An account with this email is not verified"
+    ),
+
     EMAIL_NOT_FOUND(
             HttpStatus.NOT_FOUND,
             "User email not found"

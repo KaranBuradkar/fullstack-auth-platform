@@ -3,12 +3,13 @@ import { authService } from "../../services/authService";
 import { useUser } from "../../hooks/useUser";
 import { useNavigate } from "react-router-dom";
 import { APP_ROUTES } from "../../config/AppRouteEndpoints";
+import { tokenSessionStorage } from "../../utils/SessionStorage";
 
 const VerifyEmail = () => {
     const { user } = useUser();
 
     const [otp, setOtp] = useState("");
-    const [otpSent, setOtpSent] = useState(false);
+    const [otpSent, setOtpSent] = useState(tokenSessionStorage.getOtpSent() || false);
     const [loading, setLoading] = useState(false);
     const [message, setMessage] = useState("");
     const [error, setError] = useState("");
@@ -30,6 +31,7 @@ const VerifyEmail = () => {
 
             if (response.success) {
                 setOtpSent(true);
+                tokenSessionStorage.saveOtpSent(true);
                 setMessage(
                     response.message ||
                     "OTP sent successfully. Please check your email."
@@ -41,8 +43,9 @@ const VerifyEmail = () => {
                 );
             }
         } catch (error) {
+            console.error("OTP Verification: ", error.response);
             setError(
-                error.response?.data?.message ||
+                error.response?.message ||
                 "Unable to send OTP. Please try again."
             );
             console.log(error.message);
@@ -93,6 +96,7 @@ const VerifyEmail = () => {
                 );
             }
         } catch (error) {
+            console.error("OTP Verification: ", error);
             setError(
                 error.response?.message ||
                 "OTP verification failed. Please try again."
