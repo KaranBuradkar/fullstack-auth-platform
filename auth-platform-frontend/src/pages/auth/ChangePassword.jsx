@@ -4,6 +4,7 @@ import { useNavigate } from "react-router-dom";
 import { authService } from "../../services/authService";
 import { useAuth } from "../../hooks/useAuth";
 import { APP_ROUTES } from "../../config/AppRouteEndpoints";
+import { getApiErrorMessage } from '../../utils/apiError';
 
 const ChangePassword = () => {
     const { changePassword } = useAuth();
@@ -29,33 +30,47 @@ const ChangePassword = () => {
     const handleSubmit = async (e) => {
         e.preventDefault();
 
+        if (loading) return;
+
         setLoading(true);
         setError("");
 
         try {
-            // Change Password
             const response = await authService.changePassword(form);
-            
-            if (response?.success) {
-                console.log("Change password response: ", response.message);
-                
-                navigate(APP_ROUTES.USER.DASHBOARD);
-            } else {
-                setError(response?.message || "Unable to change password.");
-            }
-        
-        } catch (error) {
-            setError(
-                error?.response?.data?.message ||
-                error?.message ||
-                "Something went wrong. Please try again."
-            );
 
-            console.error("Change password error:", error);
+            if (!response?.success) {
+                setError(
+                    response?.message || "Unable to change password."
+                );
+                return;
+            }
+
+            // Clear sensitive form values after success
+            setForm({
+                currentPassword: "",
+                newPassword: "",
+            });
+
+            navigate(APP_ROUTES.USER.DASHBOARD, {
+                replace: true,
+                state: {
+                    successMessage:
+                    response.message || "Password changed successfully.",
+                },
+            });
+        } catch (error) {
+            setError(getApiErrorMessage(error));
+
+            console.error("Change password failed", {
+                status: error?.response?.status,
+                code: error?.response?.data?.code,
+                requestId: error?.response?.data?.requestId,
+            });
         } finally {
             setLoading(false);
         }
     };
+
 
     return (
         <div className="flex min-h-screen items-center justify-center bg-linear-to-br from-slate-50 via-blue-50 to-indigo-100 px-4 py-10">

@@ -7,6 +7,7 @@ import { useUser } from "../../hooks/useUser";
 import { APP_ROUTES } from "../../config/AppRouteEndpoints";
 import { tokenStorage } from "../../utils/storage";
 import { tokenSessionStorage } from "../../utils/SessionStorage";
+import { getApiErrorMessage } from '../../utils/apiError';
 
 const Login = () => {
 
@@ -40,44 +41,65 @@ const Login = () => {
     try {
       const response = await authService.login(form);
 
-      if(!response.success) {
-        throw new Error("Failed to login user");
-      }
-      
-      const accessToken = response.data.accessToken;
-      const refreshToken = response.data.refreshToken;
-
-      tokenStorage.setAccessToken(accessToken);
-      tokenStorage.setRefreshToken(refreshToken);
-
-      setAccessToken(accessToken);
-      setRefreshToken(refreshToken);
-
-      // If account already verified then open Dashboard
-      if(response.data.emailVerified) {
-        navigate(APP_ROUTES.USER.DASHBOARD);
+      if (!response?.success || !response?.data) {
+        setError(
+          typeof response?.message === "string" &&
+          response.message.trim()
+            ? response.message
+            : "Login could not be completed."
+        );
         return;
       }
       
-      // User details
-      const data = {
-        id: response.data.id,
-        fullName: response.data.fullName,
-        email: response.data.email,
-        emailVerified: response.data.emailVerified,
-        role: response.data.role
+      const data = response.data;
+
+      // Validate the minimum expected response shape
+      if (
+        typeof data.accessToken !== "string" ||
+        typeof data.refreshToken !== "string" ||
+        typeof data.email !== "string"
+      ) {
+        throw new Error("Invalid registration response");
       }
+
+      // Login user details
+      const loginUser = {
+        id: data.id,
+        fullName: data.fullName,
+        email: data.email,
+        emailVerified: data.emailVerified,
+        role: data.role,
+      };
+
+      // Save authentication tokens
+      tokenStorage.setAccessToken(data.accessToken);
+      tokenStorage.setRefreshToken(data.refreshToken);
+
+      setAccessToken(data.accessToken);
+      setRefreshToken(data.refreshToken);
+
       // Save session for do not loss for verification
       tokenSessionStorage.saveUserEmail(data.email);
-      // save in user context
-      setUser(data);
-      // Navigate to verify email
-      navigate(APP_ROUTES.AUTH.VERIFY_EMAIL);
 
+      // Update shared user state
+      setUser(loginUser);
+
+      if (!loginUser.emailVerified) {
+        // Continue email verification
+        navigate(APP_ROUTES.AUTH.VERIFY_EMAIL, { replace: true });
+        return;
+      }      
+
+      // Continue dashboard
+      navigate(APP_ROUTES.USER.DASHBOARD, { replace: true });
+  
     } catch (error) {
+      // Unexpected errors should be logged for debugging,
+      if (!error?.response && !error?.request) {
+        console.error("Login application error:", error);
+      }
 
-      const data = error.response?.data || error;
-      setError(data?.message || "Login failed");
+      setError(getApiErrorMessage(error));
     } finally {
       setLoading(false);
     }

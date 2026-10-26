@@ -4,6 +4,7 @@ import { useUser } from "../../hooks/useUser";
 import { useNavigate } from "react-router-dom";
 import { APP_ROUTES } from "../../config/AppRouteEndpoints";
 import { tokenSessionStorage } from "../../utils/SessionStorage";
+import { getApiErrorMessage } from '../../utils/apiError';
 
 const VerifyEmail = () => {
     const { user } = useUser();
@@ -43,12 +44,13 @@ const VerifyEmail = () => {
                 );
             }
         } catch (error) {
-            console.error("OTP Verification: ", error.response);
-            setError(
-                error.response?.message ||
-                "Unable to send OTP. Please try again."
-            );
-            console.log(error.message);
+            setError(getApiErrorMessage(error));
+
+            console.error("Send email OTP failed", {
+                status: error?.response?.status,
+                code: error?.response?.data?.code,
+                requestId: error?.response?.data?.requestId,
+            });
             
         } finally {
             setLoading(false);
@@ -96,11 +98,13 @@ const VerifyEmail = () => {
                 );
             }
         } catch (error) {
-            console.error("OTP Verification: ", error);
-            setError(
-                error.response?.message ||
-                "OTP verification failed. Please try again."
-            );
+            setError(getApiErrorMessage(error));
+
+            console.error("Verify email failed", {
+                status: error?.response?.status,
+                code: error?.response?.data?.code,
+                requestId: error?.response?.data?.requestId,
+            });
         } finally {
             setLoading(false);
         }

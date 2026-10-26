@@ -21,7 +21,13 @@ const Dashboard = () => {
 
             navigate(APP_ROUTES.AUTH.LOGIN);    
         } catch(error) {
-            console.log("Failed to logout");
+            // setError(getApiErrorMessage(error));
+
+            console.error("Logout accounnt failed", {
+                status: error?.response?.status,
+                code: error?.response?.data?.code,
+                requestId: error?.response?.data?.requestId,
+            });
         } finally {
             tokenStorage.clear();
     
@@ -46,8 +52,6 @@ const Dashboard = () => {
                 refreshToken: currentRefreshToken,
             });
     
-            console.log("API Response: ", response.message);
-
             const newAccessToken = response.data.accessToken;
             const newRefreshToken = response.data.refreshToken;
     
@@ -58,7 +62,13 @@ const Dashboard = () => {
             setRefreshToken(newRefreshToken);
 
         } catch (error) {
-            console.error("Refresh token failed: ", error);
+            // setError(getApiErrorMessage(error));
+
+            console.error("Refresh token failed", {
+                status: error?.response?.status,
+                code: error?.response?.data?.code,
+                requestId: error?.response?.data?.requestId,
+            });
             handleLogout();
         }
     };
