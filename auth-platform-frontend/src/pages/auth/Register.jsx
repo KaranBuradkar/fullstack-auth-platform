@@ -7,6 +7,7 @@ import { APP_ROUTES } from "../../config/AppRouteEndpoints";
 import { authService } from "../../services/authService";
 import { tokenStorage } from "../../utils/storage";
 import { tokenSessionStorage } from "../../utils/SessionStorage";
+import { getApiErrorMessage } from '../../utils/apiError';
 
 const Register = () => {
   const { accessToken, setAccessToken, refreshToken, setRefreshToken } = useAuth();
@@ -22,12 +23,16 @@ const Register = () => {
 
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
-
+  
   const handleChange = (e) => {
-    setForm({
-      ...form,
-      [e.target.name]: e.target.value,
-    });
+    const { name, value } = e.target;
+
+    setForm((previous) => ({
+      ...previous,
+      [name]: value,
+    }));
+
+    setError("");
   };
 
   // Handle register new account
@@ -40,46 +45,59 @@ const Register = () => {
     try {
       // User Registration
       const response = await authService.register(form);
-
-      if(!response.success) {
-        throw new Error("");
+    
+      if (!response?.success || !response?.data) {
+        setError(
+          typeof response?.message === "string" &&
+          response.message.trim()
+            ? response.message
+            : "Registration could not be completed."
+        );
+        return;
       }
 
-      const accessToken = response.data.accessToken;
-      const refreshToken = response.data.refreshToken;
-      const email = response.data.email;
+      const data = response.data;
 
-      tokenStorage.setAccessToken(accessToken);
-      tokenStorage.setRefreshToken(refreshToken);
+      // Validate the minimum expected response shape
+      if (
+        typeof data.accessToken !== "string" ||
+        typeof data.refreshToken !== "string" ||
+        typeof data.email !== "string"
+      ) {
+        throw new Error("Invalid registration response");
+      }
 
-      setAccessToken(accessToken);
-      setRefreshToken(refreshToken);
-
-      // User details
-      const data = {
-        id: response.data.id,
-        fullName: response.data.fullName,
-        email: response.data.email,
-        emailVerified: response.data.emailVerified,
-        role: response.data.role
+      // Registered user details
+      const registeredUser = {
+        id: data.id,
+        fullName: data.fullName,
+        email: data.email,
+        emailVerified: data.emailVerified,
+        role: data.role,
       };
+
+      // Save authentication tokens
+      tokenStorage.setAccessToken(data.accessToken);
+      tokenStorage.setRefreshToken(data.refreshToken);
+
+      setAccessToken(data.accessToken);
+      setRefreshToken(data.refreshToken);
 
       // Save session for do not loss for verification
       tokenSessionStorage.saveUserEmail(data.email);
-      // save in user context
-      setUser(data);
 
-      // Navigate to verify email
-      navigate(APP_ROUTES.AUTH.VERIFY_EMAIL);
+      // Update shared user state
+      setUser(registeredUser);
 
+      // Continue email verification
+      navigate(APP_ROUTES.AUTH.VERIFY_EMAIL, { replace: true });
     } catch (error) {
-      // Handle api error response only
-      if(error.response?.data) {
-        setError(error.response?.data?.message || "Register failed");
-      } 
-      // Other error 
-      else throw new Error("Frontend logic breaks!!");
-      
+      // Unexpected errors should be logged for debugging,
+      if (!error?.response && !error?.request) {
+        console.error("Registration application error:", error);
+      }
+
+      setError(getApiErrorMessage(error));
     } finally {
       setLoading(false);
     }
@@ -93,9 +111,13 @@ const Register = () => {
         </h1>
 
         {error && (
-          <p className="mb-4 rounded-lg bg-red-100 px-4 py-3 text-sm text-red-600">
+          <div
+            role="alert"
+            aria-live="polite"
+            className="mb-4 rounded-lg bg-red-100 px-4 py-3 text-sm text-red-700"
+          >
             {error}
-          </p>
+          </div>
         )}
 
         <form onSubmit={handleSubmit} className="space-y-4">

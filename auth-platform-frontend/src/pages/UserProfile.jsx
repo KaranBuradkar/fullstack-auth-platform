@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 
 import { userService } from '../services/userService';
+import { getApiErrorMessage } from '../utils/apiError';
 
 const UserProfile = () => {
 
@@ -30,12 +31,13 @@ const UserProfile = () => {
             } catch (error) {
                 if (ignore) return;
 
-                setError(
-                    error.response?.data?.message ||
-                    "Failed to fetch user profile"
-                );
+                setError(getApiErrorMessage(error));
 
-                console.error("Profile request failed:", error);
+                console.error("Load profile failed", {
+                    status: error?.response?.status,
+                    code: error?.response?.data?.code,
+                    requestId: error?.response?.data?.requestId,
+                });
             } finally {
                 if (!ignore) {
                     setLoading(false);

@@ -28,10 +28,7 @@ axiosClient.interceptors.response.use(
   (response) => response,
 
   async (error) => {
-    const originalRequest = error.config;
-
-    console.log("API ERROR: ", error.response?.data?.message || "no defined");
-    
+    const originalRequest = error.config;    
 
     // Access Token expired then call 
     // update refresh token
