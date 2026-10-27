@@ -140,6 +140,16 @@ const Login = () => {
             outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
           />
 
+          <div className="mt-2 flex justify-end">
+            <Link
+              to={APP_ROUTES.AUTH.FORGOT_PASSWORD}
+              className="text-sm font-medium text-blue-600
+              hover:text-blue-700 hover:underline"
+            >
+              Forgot Password?
+            </Link>
+          </div>
+
           <button
             type="submit"
             disabled={loading}

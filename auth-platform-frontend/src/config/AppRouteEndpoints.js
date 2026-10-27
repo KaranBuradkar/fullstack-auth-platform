@@ -6,7 +6,8 @@ export const APP_ROUTES = {
         LOGIN: "/login",
         REGISTER: "/register",
         CHANGE_PASSWORD: "/change-password",
-        VERIFY_EMAIL: "/verify-email"
+        VERIFY_EMAIL: "/verify-email",
+        FORGOT_PASSWORD: "/forgot-password"
     },
 
     // User details and personalizations
