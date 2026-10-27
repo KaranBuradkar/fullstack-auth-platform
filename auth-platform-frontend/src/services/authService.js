@@ -46,4 +46,16 @@ export const authService = {
         const response = await axiosClient.post(API_ENDPOINTSTES.AUTH.VERIFY_EMAIL_OTP, payload);
         return response.data;
     },
+
+    // Send OTP on email address
+    async sendForgotPasswordOTP(payload) {
+        const response = await axiosClient.post(API_ENDPOINTSTES.AUTH.FORGOT_PASSWORD, payload);
+        return response.data;
+    },
+
+    // Reset password with OTP
+    async resetPassword(payload) {
+        const response = await axiosClient.post(API_ENDPOINTSTES.AUTH.RESET_PASSWORD, payload);
+        return response.data;
+    },
 }

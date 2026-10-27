@@ -11,6 +11,8 @@ export const API_ENDPOINTSTES = {
         SEND_EMAIL_OTP: "/auth/otp/email/send",
         VERIFY_EMAIL_OTP: "/auth/otp/email/verify",
         CHANGE_PASSWORD: "/auth/password/change",
+        FORGOT_PASSWORD: "/auth/password/forgot",
+        RESET_PASSWORD: "/auth/password/reset",
     },
 
     // User profile related backend api endpoints

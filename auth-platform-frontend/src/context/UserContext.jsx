@@ -5,7 +5,7 @@ export const UserContext = createContext(null);
 
 export const UserProvider = ({ children }) => {
 
-    const [user, setUser] = useState({ email: tokenSessionStorage.getUserEmail() } || null);
+    const [user, setUser] = useState({ email: tokenSessionStorage.getUserEmail() });
 
     const value = {
         user, setUser,

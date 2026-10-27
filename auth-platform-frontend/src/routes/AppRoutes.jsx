@@ -5,6 +5,7 @@ import Register from "../pages/auth/Register";
 import Dashboard from "../pages/Dashboard";
 import ChangePassword from "../pages/auth/ChangePassword";
 import VerifyEmail from "../pages/auth/VerifyEmail";
+import ForgotPassword from "../pages/auth/ForgotPassword";
 
 import { useAuth } from "../hooks/useAuth";
 import { APP_ROUTES } from "../config/AppRouteEndpoints";
@@ -86,6 +87,15 @@ const AppRoutes = () => {
             <ProtectedRoute>
               <VerifyEmail />
             </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path={APP_ROUTES.AUTH.FORGOT_PASSWORD}
+          element={
+            <PublicRoute>
+              <ForgotPassword />
+            </PublicRoute>
           }
         />
 

@@ -14,14 +14,18 @@ public final class SecurityEndpoints {
     public static final String[] PUBLIC_URL_PATTERNS = {
             "/api/v1/auth/register",
             "/api/v1/auth/login",
-            "/api/v1/auth/refresh"
+            "/api/v1/auth/refresh",
+            AUTH_BASE + "/password/forgot",
+            AUTH_BASE + "/password/reset",
     };
 
     // Endpoints that do not require JWT authentication
     public static final Set<String> JWT_SKIP_EXACT = Set.of(
             AUTH_BASE + "/login",
             AUTH_BASE + "/register",
-            AUTH_BASE + "/refresh"
+            AUTH_BASE + "/refresh",
+            AUTH_BASE + "/password/forgot",
+            AUTH_BASE + "/password/reset"
     );
 
     // Endpoints that unverified users may access
