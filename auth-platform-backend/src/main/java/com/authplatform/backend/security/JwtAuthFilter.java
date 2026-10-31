@@ -44,7 +44,8 @@ public class JwtAuthFilter extends OncePerRequestFilter {
         try {
             // 1. Skip if user already authenticated or request for public apis
             if (SecurityEndpoints.shouldSkipJwt(request.getServletPath())
-                    || SecurityContextHolder.getContext().getAuthentication() != null) {
+                    || SecurityContextHolder.getContext().getAuthentication() != null
+                    || SecurityEndpoints.startsWith(request.getServletPath())) {
                 filterChain.doFilter(request, response);
                 return;
             }

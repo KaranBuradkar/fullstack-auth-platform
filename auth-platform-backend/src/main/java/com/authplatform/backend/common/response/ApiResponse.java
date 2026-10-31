@@ -1,17 +1,29 @@
 package com.authplatform.backend.common.response;
 
+import io.swagger.v3.oas.annotations.media.Schema;
+
 import java.time.Instant;
 import java.util.List;
 
+@Schema(description = "Standard API response")
 public record ApiResponse<T>(
+        @Schema(description = "Indicates request success")
         boolean success,
+        @Schema(description = "Response timestamp")
         Instant timestamp,
+        @Schema(description = "HTTP status code")
         int status,
+        @Schema(description = "Application response code")
         String code,
+        @Schema(description = "Response message")
         String message,
+        @Schema(description = "Response payload")
         T data,
+        @Schema(description = "Error details")
         List<ApiError> errors,
+        @Schema(description = "Request path")
         String path,
+        @Schema(description = "Unique request identifier")
         String requestId
 ) {
 

@@ -12,11 +12,22 @@ public final class SecurityEndpoints {
 
     // Public endpoints in Spring Security
     public static final String[] PUBLIC_URL_PATTERNS = {
-            "/api/v1/auth/register",
-            "/api/v1/auth/login",
-            "/api/v1/auth/refresh",
+            // Root
+            "/",
+
+            // Authentication
+            AUTH_BASE + "/register",
+            AUTH_BASE + "/login",
+            AUTH_BASE + "/refresh",
+
+            // Password management
             AUTH_BASE + "/password/forgot",
             AUTH_BASE + "/password/reset",
+
+            // API documentation
+            "/swagger-ui/**",
+            "/swagger-ui.html",
+            "/v3/api-docs/**"
     };
 
     // Endpoints that do not require JWT authentication
@@ -25,7 +36,12 @@ public final class SecurityEndpoints {
             AUTH_BASE + "/register",
             AUTH_BASE + "/refresh",
             AUTH_BASE + "/password/forgot",
-            AUTH_BASE + "/password/reset"
+            AUTH_BASE + "/password/reset",
+
+            // API documentation
+            "/swagger-ui",
+            "/swagger-ui/index.html",
+            "/v3/api-docs/**"
     );
 
     // Endpoints that unverified users may access
@@ -36,6 +52,14 @@ public final class SecurityEndpoints {
 
     public static boolean shouldSkipJwt(String uri) {
         return JWT_SKIP_EXACT.contains(uri);
+    }
+
+    public static boolean startsWith(String uri) {
+        return uri.startsWith("/swagger-ui") ||
+                uri.startsWith("/v3/api-docs") ||
+                uri.startsWith("/swagger-resources") ||
+                uri.startsWith("/webjars") ||
+                uri.startsWith("/v3/api-docs/swagger-config");
     }
 
     public static boolean canAccessWithoutVerifiedEmail(String uri) {
