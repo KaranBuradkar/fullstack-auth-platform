@@ -9,6 +9,9 @@ import com.authplatform.backend.dto.request.RegisterRequest;
 import com.authplatform.backend.dto.response.AuthResponse;
 import com.authplatform.backend.dto.response.UserTokenResponse;
 import com.authplatform.backend.service.AuthService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
@@ -16,6 +19,10 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
+@Tag(
+        name = "Authentication",
+        description = "Registration, login management APIs"
+)
 @RestController
 @RequestMapping("/api/v1/auth")
 public class AuthController extends BaseController {
@@ -27,6 +34,21 @@ public class AuthController extends BaseController {
         this.authService = authService;
     }
 
+    @Operation(
+            summary = "Register user",
+            description = "Creates a new user account"
+    )
+    @ApiResponses({
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(
+                    responseCode = "201",
+                    description = "User registered successfully"),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(
+                    responseCode = "400",
+                    description = "Validation failed"),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(
+                    responseCode = "409",
+                    description = "User already exists")
+    })
     @PostMapping("/register")
     public ResponseEntity<ApiResponse<AuthResponse>> register(
             @RequestBody @Valid RegisterRequest request
