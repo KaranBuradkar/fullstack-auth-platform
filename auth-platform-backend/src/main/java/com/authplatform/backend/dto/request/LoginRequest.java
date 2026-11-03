@@ -19,7 +19,7 @@ public record LoginRequest(
 
         @Schema(
                 description = "Registered user password",
-                example = "Pass@123",
+                example = "Password@123",
                 requiredMode = Schema.RequiredMode.REQUIRED
         )
         @NotBlank(message = "Password is required")
