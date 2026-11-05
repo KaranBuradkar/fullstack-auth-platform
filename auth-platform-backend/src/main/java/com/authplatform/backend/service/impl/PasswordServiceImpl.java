@@ -3,19 +3,25 @@ package com.authplatform.backend.service.impl;
 import com.authplatform.backend.common.exception.ApiAuthenticationException;
 import com.authplatform.backend.common.exception.ApiException;
 import com.authplatform.backend.common.exception.BadRequestException;
+import com.authplatform.backend.common.exception.OtpVerificationException;
 import com.authplatform.backend.common.response.ApiErrorCode;
 import com.authplatform.backend.common.service.email.EmailService;
-import com.authplatform.backend.config.OtpProperties;
+import com.authplatform.backend.entity.UserOTP;
+import com.authplatform.backend.repository.UserOtpRepository;
+import com.authplatform.backend.security.otp.OtpEncoder;
+import com.authplatform.backend.security.otp.OtpGenerator;
 import com.authplatform.backend.dto.request.ChangePasswordRequest;
 import com.authplatform.backend.dto.request.ForgotPasswordRequest;
 import com.authplatform.backend.dto.request.ResetPasswordRequest;
-import com.authplatform.backend.entity.PasswordResetOtp;
 import com.authplatform.backend.entity.User;
 import com.authplatform.backend.exception.UserNotFoundException;
-import com.authplatform.backend.repository.PasswordResetOtpRepository;
 import com.authplatform.backend.repository.UserRepository;
 import com.authplatform.backend.repository.UserTokenRepository;
+import com.authplatform.backend.security.otp.OtpProperties;
+import com.authplatform.backend.security.otp.OtpPurpose;
 import com.authplatform.backend.service.PasswordService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -27,60 +33,94 @@ import java.time.Instant;
 @Service
 public class PasswordServiceImpl implements PasswordService {
 
+    private static final Logger log = LoggerFactory.getLogger(PasswordServiceImpl.class);
     private final UserRepository userRepository;
-    private final PasswordResetOtpRepository passwordResetOtpRepository;
-    private final OtpProperties otpProperties;
+    private final UserOtpRepository userOtpRepository;
     private final PasswordEncoder passwordEncoder;
     private final EmailService emailService;
+    private final OtpGenerator otpGenerator;
     private final UserTokenRepository userTokenRepository;
+    private final OtpEncoder otpEncoder;
+    private final OtpProperties otpProperties;
 
     public PasswordServiceImpl(
             UserRepository userRepository,
-            PasswordResetOtpRepository passwordResetOtpRepository,
-            OtpProperties otpProperties, PasswordEncoder passwordEncoder,
-            EmailService emailService, UserTokenRepository userTokenRepository
+            UserOtpRepository userOtpRepository,
+            PasswordEncoder passwordEncoder,
+            EmailService emailService,
+            OtpGenerator otpGenerator,
+            UserTokenRepository userTokenRepository,
+            OtpEncoder otpEncoder,
+            OtpProperties otpProperties
     ) {
         this.userRepository = userRepository;
-        this.passwordResetOtpRepository = passwordResetOtpRepository;
-        this.otpProperties = otpProperties;
+        this.userOtpRepository = userOtpRepository;
         this.passwordEncoder = passwordEncoder;
         this.emailService = emailService;
+        this.otpGenerator = otpGenerator;
         this.userTokenRepository = userTokenRepository;
+        this.otpEncoder = otpEncoder;
+        this.otpProperties = otpProperties;
     }
 
     @Transactional
     @Override
     public void forgotPassword(ForgotPasswordRequest request) {
 
+        // Fetch user
         User user = userRepository.findByEmail(request.email())
                         .orElseThrow(UserNotFoundException::new);
 
         // Remove previous reset otp
-        passwordResetOtpRepository.deleteAllByUser(user);
+        userOtpRepository.deleteAllByUserEmail(user.getEmail());
 
-        String otp = otpProperties.generateOtp();
+        // Generate otp
+        String otp = otpGenerator.generateOtp();
 
-        PasswordResetOtp resetOtp = new PasswordResetOtp();
-        resetOtp.setOtp(otp);
-        resetOtp.setUser(user);
-        resetOtp.setExpiresAt(Instant.now().plusSeconds(otpProperties.getOtpExpiration()));
-        resetOtp.setCreatedAt(Instant.now());
+        // Create entity to save in db
+        UserOTP resetOtp = UserOTP.of(
+                user,
+                otpEncoder.encode(OtpPurpose.PASSWORD_RESET, otp),
+                0,
+                otpProperties.maxAttempts(),
+                Instant.now().plusSeconds(otpGenerator.getOtpExpiration())
+        );
 
-        PasswordResetOtp savePasswordReset = passwordResetOtpRepository.save(resetOtp);
+        // save in db
+        userOtpRepository.save(resetOtp);
 
-        emailService.sendVerificationOtp(user.getEmail(), savePasswordReset.getOtp());
+        // send otp through email
+        emailService.sendVerificationOtp(user.getEmail(), otp);
     }
 
-    @Transactional
+    @Transactional(rollbackFor = OtpVerificationException.class)
     @Override
     public void resetPassword(ResetPasswordRequest request) {
 
-        PasswordResetOtp resetOtp = passwordResetOtpRepository
-                        .findByUserEmail(request.email())
+        // Fetch reset otp by user email
+        UserOTP resetOtp = userOtpRepository
+                        .findFirstByUserEmail(request.email())
                         .orElseThrow(() -> new ApiException(ApiErrorCode.INVALID_REQUEST));
 
-        if (resetOtp.getExpiresAt().isBefore(Instant.now())) {
-            throw new ApiException(ApiErrorCode.OTP_EXPIRED);
+        // Update otp verification attempts
+        resetOtp.setAttempt(resetOtp.getAttempt() + 1);
+
+        // Check verify attempt limit
+        if(resetOtp.getAttempt() > resetOtp.getMaxAttempt()) {
+            throw new OtpVerificationException(ApiErrorCode.OTP_RATE_LIMIT_EXCEEDED);
+        }
+
+        // Check otp is expired
+        if(resetOtp.getExpiresAt().isBefore((Instant.now()))) {
+            throw new OtpVerificationException(ApiErrorCode.OTP_EXPIRED);
+        }
+
+        // Check otp is match to request.otp
+        boolean valid = otpEncoder.matches(OtpPurpose.PASSWORD_RESET,
+                request.otp(), resetOtp.getHashedOtp());
+        if(!valid) {
+            log.info("OTP received and database is mismatched in {}", OtpPurpose.PASSWORD_RESET);
+            throw new OtpVerificationException(ApiErrorCode.INVALID_OTP);
         }
 
         User user = resetOtp.getUser();
@@ -91,7 +131,7 @@ public class PasswordServiceImpl implements PasswordService {
 
         userRepository.save(user);
 
-        passwordResetOtpRepository.delete(resetOtp);
+        userOtpRepository.delete(resetOtp);
     }
 
     @Transactional

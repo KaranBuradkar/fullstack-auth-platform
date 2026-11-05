@@ -20,8 +20,9 @@ application:
       refresh-token-expiration: 3600000 # 1hr OR 60 min
 
     otp:
-      seed: [OTP_GEN_SEED]
       otp-expiration: 300 # 5 min = 300 sec
+      secret-key: 4o1a3wPX6kuy65fvj0uwTkYv9eMjmSuZDhamvggGit+263qpEBWzDph0=
+      max-attempts: 5
 
   email:
     resend:
