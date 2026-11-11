@@ -23,8 +23,6 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import org.mockito.junit.jupiter.MockitoSettings;
-import org.mockito.quality.Strictness;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -47,7 +45,6 @@ import static org.mockito.Mockito.*;
  */
 @ExtendWith(MockitoExtension.class)
 @DisplayName("AuthServiceImplUnit Tests")
-@MockitoSettings(strictness = Strictness.LENIENT)
 public class AuthServiceImplTest {
 
     // Dependencies
@@ -129,8 +126,8 @@ public class AuthServiceImplTest {
             when(userTokenRepository.save(any(UserToken.class)))
                     .thenReturn(savedUserToken);
 
-            when(savedUserToken.getRefreshToken())
-                    .thenReturn(REFRESH_TOKEN);
+//            when(savedUserToken.getRefreshToken())
+//                    .thenReturn(REFRESH_TOKEN);
 
             when(savedUserToken.getExpiryDate())
                     .thenReturn(EXPIRY_DATE);
@@ -732,7 +729,6 @@ public class AuthServiceImplTest {
             doReturn(authorities)
                     .when(user)
                             .getAuthorities();
-//            when(user.getAuthorities()).thenReturn(authorities);
 
             when(jwtService.generateAccessToken(user))
                     .thenReturn(ACCESS_TOKEN);
@@ -742,12 +738,15 @@ public class AuthServiceImplTest {
 
             when(jwtService.getExpiry(REFRESH_TOKEN))
                     .thenReturn(Date.from(EXPIRY));
+        }
 
-            when(userTokenRepository.findByUser(user))
-                    .thenReturn(Optional.of(userToken));
+        // =========================================
+        // 1. SUCCESSFUL LOGIN
+        // =========================================
 
-            when(userTokenRepository.save(userToken))
-                    .thenReturn(userToken);
+        @Test
+        @DisplayName("Should login successfully")
+        void login_shouldLoginSuccessfully() {
 
             when(userToken.getRefreshToken())
                     .thenReturn(REFRESH_TOKEN);
@@ -761,15 +760,12 @@ public class AuthServiceImplTest {
                     REFRESH_TOKEN,
                     EXPIRY
             )).thenReturn(expectedResponse);
-        }
 
-        // =========================================
-        // 1. SUCCESSFUL LOGIN
-        // =========================================
+            when(userTokenRepository.findByUser(user))
+                    .thenReturn(Optional.of(userToken));
 
-        @Test
-        @DisplayName("Should login successfully")
-        void login_shouldLoginSuccessfully() {
+            when(userTokenRepository.save(userToken))
+                    .thenReturn(userToken);
 
             givenSuccessfulLogin();
 
@@ -789,6 +785,31 @@ public class AuthServiceImplTest {
         @Test
         @DisplayName("Should authenticate using requested email and password")
         void login_shouldPassCorrectCredentialsToAuthenticationManager() {
+
+            when(userToken.getRefreshToken())
+                    .thenReturn(REFRESH_TOKEN);
+
+            when(userToken.getExpiryDate())
+                    .thenReturn(EXPIRY);
+
+            when(userTokenRepository.findByUser(user))
+                    .thenReturn(Optional.of(userToken));
+
+            when(userTokenRepository.save(userToken))
+                    .thenReturn(userToken);
+
+            when(userMapper.toResponse(
+                    user,
+                    ACCESS_TOKEN,
+                    REFRESH_TOKEN,
+                    EXPIRY
+            )).thenReturn(expectedResponse);
+
+            when(userToken.getRefreshToken())
+                    .thenReturn(REFRESH_TOKEN);
+
+            when(userToken.getExpiryDate())
+                    .thenReturn(EXPIRY);
 
             givenSuccessfulLogin();
 
@@ -810,6 +831,25 @@ public class AuthServiceImplTest {
         @Test
         @DisplayName("Should authenticate exactly once")
         void login_shouldAuthenticateOnlyOnce() {
+
+            when(userToken.getRefreshToken())
+                    .thenReturn(REFRESH_TOKEN);
+
+            when(userToken.getExpiryDate())
+                    .thenReturn(EXPIRY);
+
+            when(userTokenRepository.findByUser(user))
+                    .thenReturn(Optional.of(userToken));
+
+            when(userTokenRepository.save(userToken))
+                    .thenReturn(userToken);
+
+            when(userMapper.toResponse(
+                    user,
+                    ACCESS_TOKEN,
+                    REFRESH_TOKEN,
+                    EXPIRY
+            )).thenReturn(expectedResponse);
 
             givenSuccessfulLogin();
 
@@ -850,7 +890,6 @@ public class AuthServiceImplTest {
         @DisplayName("Should propagate bad credentials exception")
         void login_shouldThrowBadCredentialsException() {
 
-            when(request.email()).thenReturn(EMAIL);
             when(request.password()).thenReturn(PASSWORD);
 
             when(authenticationManager.authenticate(any()))
@@ -918,6 +957,25 @@ public class AuthServiceImplTest {
         @DisplayName("Should set authenticated user in SecurityContext")
         void login_shouldSetUserInSecurityContext() {
 
+            when(userToken.getRefreshToken())
+                    .thenReturn(REFRESH_TOKEN);
+
+            when(userToken.getExpiryDate())
+                    .thenReturn(EXPIRY);
+
+            when(userTokenRepository.findByUser(user))
+                    .thenReturn(Optional.of(userToken));
+
+            when(userTokenRepository.save(userToken))
+                    .thenReturn(userToken);
+
+            when(userMapper.toResponse(
+                    user,
+                    ACCESS_TOKEN,
+                    REFRESH_TOKEN,
+                    EXPIRY
+            )).thenReturn(expectedResponse);
+
             givenSuccessfulLogin();
 
             authService.login(request);
@@ -934,7 +992,47 @@ public class AuthServiceImplTest {
         @DisplayName("Should preserve user's authorities")
         void login_shouldPreserveUserAuthorities() {
 
-            givenSuccessfulLogin();
+            when(userToken.getRefreshToken())
+                    .thenReturn(REFRESH_TOKEN);
+
+            when(userToken.getExpiryDate())
+                    .thenReturn(EXPIRY);
+
+            when(userTokenRepository.findByUser(user))
+                    .thenReturn(Optional.of(userToken));
+
+            when(userTokenRepository.save(userToken))
+                    .thenReturn(userToken);
+
+            when(userMapper.toResponse(
+                    user,
+                    ACCESS_TOKEN,
+                    REFRESH_TOKEN,
+                    EXPIRY
+            )).thenReturn(expectedResponse);
+
+            when(request.email()).thenReturn(EMAIL);
+            when(request.password()).thenReturn(PASSWORD);
+
+            when(authenticationManager.authenticate(
+                    any(UsernamePasswordAuthenticationToken.class)
+            )).thenReturn(authentication);
+
+            when(authentication.getPrincipal()).thenReturn(user);
+
+            doReturn(authorities)
+                    .when(user)
+                    .getAuthorities();
+//            when(user.getAuthorities()).thenReturn(authorities);
+
+            when(jwtService.generateAccessToken(user))
+                    .thenReturn(ACCESS_TOKEN);
+
+            when(jwtService.generateNewRefreshToken(user))
+                    .thenReturn(REFRESH_TOKEN);
+
+            when(jwtService.getExpiry(REFRESH_TOKEN))
+                    .thenReturn(Date.from(EXPIRY));
 
             authService.login(request);
 
@@ -948,6 +1046,25 @@ public class AuthServiceImplTest {
         @Test
         @DisplayName("Should create a new authenticated security token")
         void login_shouldCreateAuthenticatedToken() {
+
+            when(userToken.getRefreshToken())
+                    .thenReturn(REFRESH_TOKEN);
+
+            when(userToken.getExpiryDate())
+                    .thenReturn(EXPIRY);
+
+            when(userTokenRepository.findByUser(user))
+                    .thenReturn(Optional.of(userToken));
+
+            when(userTokenRepository.save(userToken))
+                    .thenReturn(userToken);
+
+            when(userMapper.toResponse(
+                    user,
+                    ACCESS_TOKEN,
+                    REFRESH_TOKEN,
+                    EXPIRY
+            )).thenReturn(expectedResponse);
 
             givenSuccessfulLogin();
 
@@ -970,6 +1087,25 @@ public class AuthServiceImplTest {
         @DisplayName("Should generate access token for authenticated user")
         void login_shouldGenerateAccessToken() {
 
+            when(userToken.getRefreshToken())
+                    .thenReturn(REFRESH_TOKEN);
+
+            when(userToken.getExpiryDate())
+                    .thenReturn(EXPIRY);
+
+            when(userTokenRepository.findByUser(user))
+                    .thenReturn(Optional.of(userToken));
+
+            when(userTokenRepository.save(userToken))
+                    .thenReturn(userToken);
+
+            when(userMapper.toResponse(
+                    user,
+                    ACCESS_TOKEN,
+                    REFRESH_TOKEN,
+                    EXPIRY
+            )).thenReturn(expectedResponse);
+
             givenSuccessfulLogin();
 
             authService.login(request);
@@ -982,7 +1118,47 @@ public class AuthServiceImplTest {
         @DisplayName("Should generate refresh token for authenticated user")
         void login_shouldGenerateRefreshToken() {
 
-            givenSuccessfulLogin();
+            when(userToken.getRefreshToken())
+                    .thenReturn(REFRESH_TOKEN);
+
+            when(userToken.getExpiryDate())
+                    .thenReturn(EXPIRY);
+
+            when(userTokenRepository.findByUser(user))
+                    .thenReturn(Optional.of(userToken));
+
+            when(userTokenRepository.save(userToken))
+                    .thenReturn(userToken);
+
+            when(userMapper.toResponse(
+                    user,
+                    ACCESS_TOKEN,
+                    REFRESH_TOKEN,
+                    EXPIRY
+            )).thenReturn(expectedResponse);
+
+            when(request.email()).thenReturn(EMAIL);
+            when(request.password()).thenReturn(PASSWORD);
+
+            when(authenticationManager.authenticate(
+                    any(UsernamePasswordAuthenticationToken.class)
+            )).thenReturn(authentication);
+
+            when(authentication.getPrincipal()).thenReturn(user);
+
+            doReturn(authorities)
+                    .when(user)
+                    .getAuthorities();
+//            when(user.getAuthorities()).thenReturn(authorities);
+
+            when(jwtService.generateAccessToken(user))
+                    .thenReturn(ACCESS_TOKEN);
+
+            when(jwtService.generateNewRefreshToken(user))
+                    .thenReturn(REFRESH_TOKEN);
+
+            when(jwtService.getExpiry(REFRESH_TOKEN))
+                    .thenReturn(Date.from(EXPIRY));
 
             authService.login(request);
 
@@ -993,6 +1169,24 @@ public class AuthServiceImplTest {
         @Test
         @DisplayName("Should get expiry using newly generated refresh token")
         void login_shouldGetRefreshTokenExpiry() {
+
+            when(userToken.getRefreshToken())
+                    .thenReturn(REFRESH_TOKEN);
+
+            when(userToken.getExpiryDate())
+                    .thenReturn(EXPIRY);
+            when(userTokenRepository.findByUser(user))
+                    .thenReturn(Optional.of(userToken));
+
+            when(userTokenRepository.save(userToken))
+                    .thenReturn(userToken);
+
+            when(userMapper.toResponse(
+                    user,
+                    ACCESS_TOKEN,
+                    REFRESH_TOKEN,
+                    EXPIRY
+            )).thenReturn(expectedResponse);
 
             givenSuccessfulLogin();
 
@@ -1009,6 +1203,24 @@ public class AuthServiceImplTest {
         @DisplayName("Should find existing refresh token by user")
         void login_shouldFindExistingUserToken() {
 
+            when(userToken.getRefreshToken())
+                    .thenReturn(REFRESH_TOKEN);
+
+            when(userToken.getExpiryDate())
+                    .thenReturn(EXPIRY);
+            when(userTokenRepository.findByUser(user))
+                    .thenReturn(Optional.of(userToken));
+
+            when(userTokenRepository.save(userToken))
+                    .thenReturn(userToken);
+
+            when(userMapper.toResponse(
+                    user,
+                    ACCESS_TOKEN,
+                    REFRESH_TOKEN,
+                    EXPIRY
+            )).thenReturn(expectedResponse);
+
             givenSuccessfulLogin();
 
             authService.login(request);
@@ -1019,6 +1231,24 @@ public class AuthServiceImplTest {
         @Test
         @DisplayName("Should replace existing refresh token")
         void login_shouldReplaceExistingRefreshToken() {
+
+            when(userToken.getRefreshToken())
+                    .thenReturn(REFRESH_TOKEN);
+
+            when(userToken.getExpiryDate())
+                    .thenReturn(EXPIRY);
+            when(userTokenRepository.findByUser(user))
+                    .thenReturn(Optional.of(userToken));
+
+            when(userTokenRepository.save(userToken))
+                    .thenReturn(userToken);
+
+            when(userMapper.toResponse(
+                    user,
+                    ACCESS_TOKEN,
+                    REFRESH_TOKEN,
+                    EXPIRY
+            )).thenReturn(expectedResponse);
 
             givenSuccessfulLogin();
 
@@ -1031,6 +1261,24 @@ public class AuthServiceImplTest {
         @DisplayName("Should update refresh token expiry")
         void login_shouldUpdateRefreshTokenExpiry() {
 
+            when(userToken.getRefreshToken())
+                    .thenReturn(REFRESH_TOKEN);
+
+            when(userToken.getExpiryDate())
+                    .thenReturn(EXPIRY);
+            when(userTokenRepository.findByUser(user))
+                    .thenReturn(Optional.of(userToken));
+
+            when(userTokenRepository.save(userToken))
+                    .thenReturn(userToken);
+
+            when(userMapper.toResponse(
+                    user,
+                    ACCESS_TOKEN,
+                    REFRESH_TOKEN,
+                    EXPIRY
+            )).thenReturn(expectedResponse);
+
             givenSuccessfulLogin();
 
             authService.login(request);
@@ -1042,7 +1290,46 @@ public class AuthServiceImplTest {
         @DisplayName("Should reactivate previously revoked refresh token")
         void login_shouldSetRevokedFalse() {
 
-            givenSuccessfulLogin();
+            when(userToken.getRefreshToken())
+                    .thenReturn(REFRESH_TOKEN);
+
+            when(userToken.getExpiryDate())
+                    .thenReturn(EXPIRY);
+            when(userTokenRepository.findByUser(user))
+                    .thenReturn(Optional.of(userToken));
+
+            when(userTokenRepository.save(userToken))
+                    .thenReturn(userToken);
+
+            when(userMapper.toResponse(
+                    user,
+                    ACCESS_TOKEN,
+                    REFRESH_TOKEN,
+                    EXPIRY
+            )).thenReturn(expectedResponse);
+
+            when(request.email()).thenReturn(EMAIL);
+            when(request.password()).thenReturn(PASSWORD);
+
+            when(authenticationManager.authenticate(
+                    any(UsernamePasswordAuthenticationToken.class)
+            )).thenReturn(authentication);
+
+            when(authentication.getPrincipal()).thenReturn(user);
+
+            doReturn(authorities)
+                    .when(user)
+                    .getAuthorities();
+//            when(user.getAuthorities()).thenReturn(authorities);
+
+            when(jwtService.generateAccessToken(user))
+                    .thenReturn(ACCESS_TOKEN);
+
+            when(jwtService.generateNewRefreshToken(user))
+                    .thenReturn(REFRESH_TOKEN);
+
+            when(jwtService.getExpiry(REFRESH_TOKEN))
+                    .thenReturn(Date.from(EXPIRY));
 
             authService.login(request);
 
@@ -1053,7 +1340,46 @@ public class AuthServiceImplTest {
         @DisplayName("Should save updated refresh token")
         void login_shouldSaveUpdatedUserToken() {
 
-            givenSuccessfulLogin();
+            when(userToken.getRefreshToken())
+                    .thenReturn(REFRESH_TOKEN);
+
+            when(userToken.getExpiryDate())
+                    .thenReturn(EXPIRY);
+            when(userTokenRepository.findByUser(user))
+                    .thenReturn(Optional.of(userToken));
+
+            when(userTokenRepository.save(userToken))
+                    .thenReturn(userToken);
+
+            when(userMapper.toResponse(
+                    user,
+                    ACCESS_TOKEN,
+                    REFRESH_TOKEN,
+                    EXPIRY
+            )).thenReturn(expectedResponse);
+
+            when(request.email()).thenReturn(EMAIL);
+            when(request.password()).thenReturn(PASSWORD);
+
+            when(authenticationManager.authenticate(
+                    any(UsernamePasswordAuthenticationToken.class)
+            )).thenReturn(authentication);
+
+            when(authentication.getPrincipal()).thenReturn(user);
+
+            doReturn(authorities)
+                    .when(user)
+                    .getAuthorities();
+//            when(user.getAuthorities()).thenReturn(authorities);
+
+            when(jwtService.generateAccessToken(user))
+                    .thenReturn(ACCESS_TOKEN);
+
+            when(jwtService.generateNewRefreshToken(user))
+                    .thenReturn(REFRESH_TOKEN);
+
+            when(jwtService.getExpiry(REFRESH_TOKEN))
+                    .thenReturn(Date.from(EXPIRY));
 
             authService.login(request);
 
@@ -1065,7 +1391,46 @@ public class AuthServiceImplTest {
         @DisplayName("Should update existing token instead of creating a new token")
         void login_shouldUpdateExistingTokenInsteadOfCreatingNewToken() {
 
-            givenSuccessfulLogin();
+            when(userToken.getRefreshToken())
+                    .thenReturn(REFRESH_TOKEN);
+            when(userTokenRepository.findByUser(user))
+                    .thenReturn(Optional.of(userToken));
+
+            when(userTokenRepository.save(userToken))
+                    .thenReturn(userToken);
+
+            when(userToken.getExpiryDate())
+                    .thenReturn(EXPIRY);
+
+            when(userMapper.toResponse(
+                    user,
+                    ACCESS_TOKEN,
+                    REFRESH_TOKEN,
+                    EXPIRY
+            )).thenReturn(expectedResponse);
+
+            when(request.email()).thenReturn(EMAIL);
+            when(request.password()).thenReturn(PASSWORD);
+
+            when(authenticationManager.authenticate(
+                    any(UsernamePasswordAuthenticationToken.class)
+            )).thenReturn(authentication);
+
+            when(authentication.getPrincipal()).thenReturn(user);
+
+            doReturn(authorities)
+                    .when(user)
+                    .getAuthorities();
+//            when(user.getAuthorities()).thenReturn(authorities);
+
+            when(jwtService.generateAccessToken(user))
+                    .thenReturn(ACCESS_TOKEN);
+
+            when(jwtService.generateNewRefreshToken(user))
+                    .thenReturn(REFRESH_TOKEN);
+
+            when(jwtService.getExpiry(REFRESH_TOKEN))
+                    .thenReturn(Date.from(EXPIRY));
 
             authService.login(request);
 
@@ -1088,7 +1453,28 @@ public class AuthServiceImplTest {
         @DisplayName("Should throw exception when user token does not exist")
         void login_shouldThrowWhenUserTokenNotFound() {
 
-            givenSuccessfulLogin();
+            when(request.email()).thenReturn(EMAIL);
+            when(request.password()).thenReturn(PASSWORD);
+
+            when(authenticationManager.authenticate(
+                    any(UsernamePasswordAuthenticationToken.class)
+            )).thenReturn(authentication);
+
+            when(authentication.getPrincipal()).thenReturn(user);
+
+            doReturn(authorities)
+                    .when(user)
+                    .getAuthorities();
+//            when(user.getAuthorities()).thenReturn(authorities);
+
+            when(jwtService.generateAccessToken(user))
+                    .thenReturn(ACCESS_TOKEN);
+
+            when(jwtService.generateNewRefreshToken(user))
+                    .thenReturn(REFRESH_TOKEN);
+
+            when(jwtService.getExpiry(REFRESH_TOKEN))
+                    .thenReturn(Date.from(EXPIRY));
 
             when(userTokenRepository.findByUser(user))
                     .thenReturn(Optional.empty());
@@ -1116,7 +1502,18 @@ public class AuthServiceImplTest {
         @DisplayName("Should propagate access token generation failure")
         void login_shouldPropagateAccessTokenGenerationFailure() {
 
-            givenSuccessfulLogin();
+            when(request.email()).thenReturn(EMAIL);
+            when(request.password()).thenReturn(PASSWORD);
+
+            when(authenticationManager.authenticate(
+                    any(UsernamePasswordAuthenticationToken.class)
+            )).thenReturn(authentication);
+
+            when(authentication.getPrincipal()).thenReturn(user);
+
+            doReturn(authorities)
+                    .when(user)
+                    .getAuthorities();
 
             RuntimeException exception =
                     new RuntimeException("Access token failure");
@@ -1137,7 +1534,25 @@ public class AuthServiceImplTest {
         @DisplayName("Should propagate refresh token generation failure")
         void login_shouldPropagateRefreshTokenGenerationFailure() {
 
-            givenSuccessfulLogin();
+            when(request.email()).thenReturn(EMAIL);
+            when(request.password()).thenReturn(PASSWORD);
+
+            when(authenticationManager.authenticate(
+                    any(UsernamePasswordAuthenticationToken.class)
+            )).thenReturn(authentication);
+
+            when(authentication.getPrincipal()).thenReturn(user);
+
+            doReturn(authorities)
+                    .when(user)
+                    .getAuthorities();
+//            when(user.getAuthorities()).thenReturn(authorities);
+
+            when(jwtService.generateAccessToken(user))
+                    .thenReturn(ACCESS_TOKEN);
+
+            when(jwtService.generateNewRefreshToken(user))
+                    .thenReturn(REFRESH_TOKEN);
 
             RuntimeException exception =
                     new RuntimeException("Refresh token failure");
@@ -1157,7 +1572,28 @@ public class AuthServiceImplTest {
         @DisplayName("Should propagate refresh token expiry failure")
         void login_shouldPropagateExpiryFailure() {
 
-            givenSuccessfulLogin();
+            when(request.email()).thenReturn(EMAIL);
+            when(request.password()).thenReturn(PASSWORD);
+
+            when(authenticationManager.authenticate(
+                    any(UsernamePasswordAuthenticationToken.class)
+            )).thenReturn(authentication);
+
+            when(authentication.getPrincipal()).thenReturn(user);
+
+            doReturn(authorities)
+                    .when(user)
+                    .getAuthorities();
+//            when(user.getAuthorities()).thenReturn(authorities);
+
+            when(jwtService.generateAccessToken(user))
+                    .thenReturn(ACCESS_TOKEN);
+
+            when(jwtService.generateNewRefreshToken(user))
+                    .thenReturn(REFRESH_TOKEN);
+
+            when(jwtService.getExpiry(REFRESH_TOKEN))
+                    .thenReturn(Date.from(EXPIRY));
 
             RuntimeException exception =
                     new RuntimeException("Expiry failure");
@@ -1180,6 +1616,11 @@ public class AuthServiceImplTest {
         @DisplayName("Should propagate refresh token persistence failure")
         void login_shouldPropagateTokenSaveFailure() {
 
+            when(userTokenRepository.findByUser(user))
+                    .thenReturn(Optional.of(userToken));
+
+            when(userTokenRepository.save(userToken))
+                    .thenReturn(userToken);
             givenSuccessfulLogin();
 
             RuntimeException exception =
@@ -1209,7 +1650,46 @@ public class AuthServiceImplTest {
         @DisplayName("Should return response mapped by UserMapper")
         void login_shouldReturnMappedAuthResponse() {
 
-            givenSuccessfulLogin();
+            when(userToken.getRefreshToken())
+                    .thenReturn(REFRESH_TOKEN);
+
+            when(userToken.getExpiryDate())
+                    .thenReturn(EXPIRY);
+            when(userTokenRepository.findByUser(user))
+                    .thenReturn(Optional.of(userToken));
+
+            when(userTokenRepository.save(userToken))
+                    .thenReturn(userToken);
+
+            when(userMapper.toResponse(
+                    user,
+                    ACCESS_TOKEN,
+                    REFRESH_TOKEN,
+                    EXPIRY
+            )).thenReturn(expectedResponse);
+
+            when(request.email()).thenReturn(EMAIL);
+            when(request.password()).thenReturn(PASSWORD);
+
+            when(authenticationManager.authenticate(
+                    any(UsernamePasswordAuthenticationToken.class)
+            )).thenReturn(authentication);
+
+            when(authentication.getPrincipal()).thenReturn(user);
+
+            doReturn(authorities)
+                    .when(user)
+                    .getAuthorities();
+//            when(user.getAuthorities()).thenReturn(authorities);
+
+            when(jwtService.generateAccessToken(user))
+                    .thenReturn(ACCESS_TOKEN);
+
+            when(jwtService.generateNewRefreshToken(user))
+                    .thenReturn(REFRESH_TOKEN);
+
+            when(jwtService.getExpiry(REFRESH_TOKEN))
+                    .thenReturn(Date.from(EXPIRY));
 
             AuthResponse response = authService.login(request);
 
@@ -1220,7 +1700,46 @@ public class AuthServiceImplTest {
         @DisplayName("Should map response using authenticated user and generated tokens")
         void login_shouldMapResponseWithCorrectArguments() {
 
-            givenSuccessfulLogin();
+            when(userToken.getRefreshToken())
+                    .thenReturn(REFRESH_TOKEN);
+
+            when(userToken.getExpiryDate())
+                    .thenReturn(EXPIRY);
+            when(userTokenRepository.findByUser(user))
+                    .thenReturn(Optional.of(userToken));
+
+            when(userTokenRepository.save(userToken))
+                    .thenReturn(userToken);
+
+            when(userMapper.toResponse(
+                    user,
+                    ACCESS_TOKEN,
+                    REFRESH_TOKEN,
+                    EXPIRY
+            )).thenReturn(expectedResponse);
+
+            when(request.email()).thenReturn(EMAIL);
+            when(request.password()).thenReturn(PASSWORD);
+
+            when(authenticationManager.authenticate(
+                    any(UsernamePasswordAuthenticationToken.class)
+            )).thenReturn(authentication);
+
+            when(authentication.getPrincipal()).thenReturn(user);
+
+            doReturn(authorities)
+                    .when(user)
+                    .getAuthorities();
+//            when(user.getAuthorities()).thenReturn(authorities);
+
+            when(jwtService.generateAccessToken(user))
+                    .thenReturn(ACCESS_TOKEN);
+
+            when(jwtService.generateNewRefreshToken(user))
+                    .thenReturn(REFRESH_TOKEN);
+
+            when(jwtService.getExpiry(REFRESH_TOKEN))
+                    .thenReturn(Date.from(EXPIRY));
 
             authService.login(request);
 
@@ -1236,7 +1755,46 @@ public class AuthServiceImplTest {
         @DisplayName("Should propagate response mapping failure")
         void login_shouldPropagateResponseMappingFailure() {
 
-            givenSuccessfulLogin();
+            when(userToken.getRefreshToken())
+                    .thenReturn(REFRESH_TOKEN);
+
+            when(userToken.getExpiryDate())
+                    .thenReturn(EXPIRY);
+            when(userTokenRepository.findByUser(user))
+                    .thenReturn(Optional.of(userToken));
+
+            when(userTokenRepository.save(userToken))
+                    .thenReturn(userToken);
+
+            when(userMapper.toResponse(
+                    user,
+                    ACCESS_TOKEN,
+                    REFRESH_TOKEN,
+                    EXPIRY
+            )).thenReturn(expectedResponse);
+
+            when(request.email()).thenReturn(EMAIL);
+            when(request.password()).thenReturn(PASSWORD);
+
+            when(authenticationManager.authenticate(
+                    any(UsernamePasswordAuthenticationToken.class)
+            )).thenReturn(authentication);
+
+            when(authentication.getPrincipal()).thenReturn(user);
+
+            doReturn(authorities)
+                    .when(user)
+                    .getAuthorities();
+//            when(user.getAuthorities()).thenReturn(authorities);
+
+            when(jwtService.generateAccessToken(user))
+                    .thenReturn(ACCESS_TOKEN);
+
+            when(jwtService.generateNewRefreshToken(user))
+                    .thenReturn(REFRESH_TOKEN);
+
+            when(jwtService.getExpiry(REFRESH_TOKEN))
+                    .thenReturn(Date.from(EXPIRY));
 
             RuntimeException exception =
                     new RuntimeException("Response mapping failure");
@@ -1267,6 +1825,24 @@ public class AuthServiceImplTest {
         @Test
         @DisplayName("Should execute login operations in correct order")
         void login_shouldExecuteOperationsInCorrectOrder() {
+
+            when(userToken.getRefreshToken())
+                    .thenReturn(REFRESH_TOKEN);
+
+            when(userToken.getExpiryDate())
+                    .thenReturn(EXPIRY);
+            when(userTokenRepository.findByUser(user))
+                    .thenReturn(Optional.of(userToken));
+
+            when(userTokenRepository.save(userToken))
+                    .thenReturn(userToken);
+
+            when(userMapper.toResponse(
+                    user,
+                    ACCESS_TOKEN,
+                    REFRESH_TOKEN,
+                    EXPIRY
+            )).thenReturn(expectedResponse);
 
             givenSuccessfulLogin();
 
@@ -1304,6 +1880,24 @@ public class AuthServiceImplTest {
         @Test
         @DisplayName("Should not create a new user during login")
         void login_shouldNotCreateNewUser() {
+
+            when(userToken.getRefreshToken())
+                    .thenReturn(REFRESH_TOKEN);
+
+            when(userToken.getExpiryDate())
+                    .thenReturn(EXPIRY);
+            when(userTokenRepository.findByUser(user))
+                    .thenReturn(Optional.of(userToken));
+
+            when(userTokenRepository.save(userToken))
+                    .thenReturn(userToken);
+
+            when(userMapper.toResponse(
+                    user,
+                    ACCESS_TOKEN,
+                    REFRESH_TOKEN,
+                    EXPIRY
+            )).thenReturn(expectedResponse);
 
             givenSuccessfulLogin();
 

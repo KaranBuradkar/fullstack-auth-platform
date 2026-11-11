@@ -88,12 +88,14 @@ public class EmailOtpServiceImpl implements EmailOtpService {
                 .findFirstByUser(user)
                 .orElseThrow(() -> new OtpVerificationException(ApiErrorCode.OTP_NOT_FOUND));
 
-        verificationOtp.setAttempt(verificationOtp.getAttempt() + 1);
 
         // Check verify attempt limit
-        if(verificationOtp.getAttempt() > verificationOtp.getMaxAttempt()) {
+        if(verificationOtp.getAttempt() >= verificationOtp.getMaxAttempt()) {
             throw new OtpVerificationException(ApiErrorCode.OTP_RATE_LIMIT_EXCEEDED);
         }
+
+        // Increment attempt
+        verificationOtp.setAttempt(verificationOtp.getAttempt() + 1);
 
         // Check otp is expired
         if(verificationOtp.getExpiresAt().isBefore((Instant.now()))) {
