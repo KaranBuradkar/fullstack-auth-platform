@@ -63,7 +63,7 @@ public class AuthServiceImpl implements AuthService {
                 .addKeyValue("event", "USER_REGISTRATION_STARTED")
                 .log("User registration started");
 
-        // 1. Check if user already exist with same email
+        // 1. Check if user already exists with the same email
         User user = resolveUserByEmail(request.email());
         if (user != null && user.getEmail().equals(request.email())) {
             log.atWarn()
@@ -198,9 +198,11 @@ public class AuthServiceImpl implements AuthService {
     }
 
     @Override
-    public void logout(String name) {
-        User user = userRepository.findByEmail(name)
+    @Transactional
+    public void logout(String email) {
+        User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new ApiException(ApiErrorCode.EMAIL_NOT_FOUND));
+
         UserToken userToken = userTokenRepository.findByUser(user)
                 .orElseThrow(UserTokenNotFoundException::new);
 

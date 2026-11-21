@@ -1,9 +1,12 @@
 package com.authplatform.backend.service;
 
 import com.authplatform.backend.common.exception.ApiException;
+import com.authplatform.backend.common.exception.RefreshTokenExpiredException;
+import com.authplatform.backend.common.exception.RefreshTokenRevokedException;
 import com.authplatform.backend.dto.request.LoginRequest;
 import com.authplatform.backend.dto.request.RegisterRequest;
 import com.authplatform.backend.dto.response.AuthResponse;
+import com.authplatform.backend.dto.response.UserTokenResponse;
 import com.authplatform.backend.entity.User;
 import com.authplatform.backend.entity.UserToken;
 import com.authplatform.backend.exception.UserAlreadyExistsException;
@@ -14,6 +17,7 @@ import com.authplatform.backend.repository.UserTokenRepository;
 import com.authplatform.backend.security.JwtService;
 
 import com.authplatform.backend.service.impl.AuthServiceImpl;
+import org.assertj.core.api.AssertProvider;
 import org.junit.jupiter.api.*;
 import org.junit.jupiter.api.extension.ExtendWith;
 
@@ -36,6 +40,7 @@ import java.time.Instant;
 import java.util.*;
 
 import static org.assertj.core.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 
@@ -94,8 +99,12 @@ public class AuthServiceImplTest {
 
         @BeforeEach
         void setUp() {
-
             request = mock(RegisterRequest.class);
+        }
+
+        @Test
+        @DisplayName("Should register user successfully")
+        void register_shouldRegisterUserSuccessfully() {
 
             when(request.email()).thenReturn(EMAIL);
             when(request.password()).thenReturn(RAW_PASSWORD);
@@ -126,9 +135,6 @@ public class AuthServiceImplTest {
             when(userTokenRepository.save(any(UserToken.class)))
                     .thenReturn(savedUserToken);
 
-//            when(savedUserToken.getRefreshToken())
-//                    .thenReturn(REFRESH_TOKEN);
-
             when(savedUserToken.getExpiryDate())
                     .thenReturn(EXPIRY_DATE);
 
@@ -138,11 +144,6 @@ public class AuthServiceImplTest {
                     REFRESH_TOKEN,
                     EXPIRY_DATE
             )).thenReturn(expectedResponse);
-        }
-
-        @Test
-        @DisplayName("Should register user successfully")
-        void register_shouldRegisterUserSuccessfully() {
 
             when(userRepository.findByEmail(EMAIL))
                     .thenReturn(Optional.empty());
@@ -175,6 +176,45 @@ public class AuthServiceImplTest {
         @DisplayName("Should code password before saving user")
         void register_shouldEncodePasswordBeforeSavingUser() {
 
+            when(request.email()).thenReturn(EMAIL);
+            when(request.password()).thenReturn(RAW_PASSWORD);
+
+            user = new User();
+
+            savedUser = mock(User.class);
+            savedUserToken = mock(UserToken.class);
+            expectedResponse = mock(AuthResponse.class);
+
+            when(userMapper.toEntity(request)).thenReturn(user);
+
+            when(passwordEncoder.encode(RAW_PASSWORD))
+                    .thenReturn(ENCODED_PASSWORD);
+
+            when(userRepository.save(user))
+                    .thenReturn(savedUser);
+
+            when(jwtService.generateAccessToken(savedUser))
+                    .thenReturn(ACCESS_TOKEN);
+
+            when(jwtService.generateNewRefreshToken(savedUser))
+                    .thenReturn(REFRESH_TOKEN);
+
+            when(jwtService.getExpiry(REFRESH_TOKEN))
+                    .thenReturn(Date.from(EXPIRY_DATE));
+
+            when(userTokenRepository.save(any(UserToken.class)))
+                    .thenReturn(savedUserToken);
+
+            when(savedUserToken.getExpiryDate())
+                    .thenReturn(EXPIRY_DATE);
+
+            when(userMapper.toResponse(
+                    savedUser,
+                    ACCESS_TOKEN,
+                    REFRESH_TOKEN,
+                    EXPIRY_DATE
+            )).thenReturn(expectedResponse);
+
             when(userRepository.findByEmail(EMAIL))
                     .thenReturn(Optional.empty());
 
@@ -195,6 +235,45 @@ public class AuthServiceImplTest {
         @Test
         @DisplayName("Should never store the raw password")
         void register_shouldNeverStoreRawPassword() {
+
+            when(request.email()).thenReturn(EMAIL);
+            when(request.password()).thenReturn(RAW_PASSWORD);
+
+            user = new User();
+
+            savedUser = mock(User.class);
+            savedUserToken = mock(UserToken.class);
+            expectedResponse = mock(AuthResponse.class);
+
+            when(userMapper.toEntity(request)).thenReturn(user);
+
+            when(passwordEncoder.encode(RAW_PASSWORD))
+                    .thenReturn(ENCODED_PASSWORD);
+
+            when(userRepository.save(user))
+                    .thenReturn(savedUser);
+
+            when(jwtService.generateAccessToken(savedUser))
+                    .thenReturn(ACCESS_TOKEN);
+
+            when(jwtService.generateNewRefreshToken(savedUser))
+                    .thenReturn(REFRESH_TOKEN);
+
+            when(jwtService.getExpiry(REFRESH_TOKEN))
+                    .thenReturn(Date.from(EXPIRY_DATE));
+
+            when(userTokenRepository.save(any(UserToken.class)))
+                    .thenReturn(savedUserToken);
+
+            when(savedUserToken.getExpiryDate())
+                    .thenReturn(EXPIRY_DATE);
+
+            when(userMapper.toResponse(
+                    savedUser,
+                    ACCESS_TOKEN,
+                    REFRESH_TOKEN,
+                    EXPIRY_DATE
+            )).thenReturn(expectedResponse);
 
             when(userRepository.findByEmail(EMAIL))
                     .thenReturn(Optional.empty());
@@ -221,6 +300,45 @@ public class AuthServiceImplTest {
         @DisplayName("Should generate access and refresh tokens")
         void register_shouldGenerateAccessAndRefreshTokens() {
 
+            when(request.email()).thenReturn(EMAIL);
+            when(request.password()).thenReturn(RAW_PASSWORD);
+
+            user = new User();
+
+            savedUser = mock(User.class);
+            savedUserToken = mock(UserToken.class);
+            expectedResponse = mock(AuthResponse.class);
+
+            when(userMapper.toEntity(request)).thenReturn(user);
+
+            when(passwordEncoder.encode(RAW_PASSWORD))
+                    .thenReturn(ENCODED_PASSWORD);
+
+            when(userRepository.save(user))
+                    .thenReturn(savedUser);
+
+            when(jwtService.generateAccessToken(savedUser))
+                    .thenReturn(ACCESS_TOKEN);
+
+            when(jwtService.generateNewRefreshToken(savedUser))
+                    .thenReturn(REFRESH_TOKEN);
+
+            when(jwtService.getExpiry(REFRESH_TOKEN))
+                    .thenReturn(Date.from(EXPIRY_DATE));
+
+            when(userTokenRepository.save(any(UserToken.class)))
+                    .thenReturn(savedUserToken);
+
+            when(savedUserToken.getExpiryDate())
+                    .thenReturn(EXPIRY_DATE);
+
+            when(userMapper.toResponse(
+                    savedUser,
+                    ACCESS_TOKEN,
+                    REFRESH_TOKEN,
+                    EXPIRY_DATE
+            )).thenReturn(expectedResponse);
+
             when(userRepository.findByEmail(EMAIL))
                     .thenReturn(Optional.empty());
 
@@ -236,6 +354,45 @@ public class AuthServiceImplTest {
         @Test
         @DisplayName("Should save refresh token with correct details")
         void register_shouldSaveRefreshTokenWithCorrectDetails() {
+
+            when(request.email()).thenReturn(EMAIL);
+            when(request.password()).thenReturn(RAW_PASSWORD);
+
+            user = new User();
+
+            savedUser = mock(User.class);
+            savedUserToken = mock(UserToken.class);
+            expectedResponse = mock(AuthResponse.class);
+
+            when(userMapper.toEntity(request)).thenReturn(user);
+
+            when(passwordEncoder.encode(RAW_PASSWORD))
+                    .thenReturn(ENCODED_PASSWORD);
+
+            when(userRepository.save(user))
+                    .thenReturn(savedUser);
+
+            when(jwtService.generateAccessToken(savedUser))
+                    .thenReturn(ACCESS_TOKEN);
+
+            when(jwtService.generateNewRefreshToken(savedUser))
+                    .thenReturn(REFRESH_TOKEN);
+
+            when(jwtService.getExpiry(REFRESH_TOKEN))
+                    .thenReturn(Date.from(EXPIRY_DATE));
+
+            when(userTokenRepository.save(any(UserToken.class)))
+                    .thenReturn(savedUserToken);
+            
+            when(savedUserToken.getExpiryDate())
+                    .thenReturn(EXPIRY_DATE);
+
+            when(userMapper.toResponse(
+                    savedUser,
+                    ACCESS_TOKEN,
+                    REFRESH_TOKEN,
+                    EXPIRY_DATE
+            )).thenReturn(expectedResponse);
 
             when(userRepository.findByEmail(EMAIL))
                     .thenReturn(Optional.empty());
@@ -263,6 +420,45 @@ public class AuthServiceImplTest {
         @DisplayName("Should use expiry returned by jwtService")
         void register_shouldUseExpiryReturnedByJwtService() {
 
+            when(request.email()).thenReturn(EMAIL);
+            when(request.password()).thenReturn(RAW_PASSWORD);
+
+            user = new User();
+
+            savedUser = mock(User.class);
+            savedUserToken = mock(UserToken.class);
+            expectedResponse = mock(AuthResponse.class);
+
+            when(userMapper.toEntity(request)).thenReturn(user);
+
+            when(passwordEncoder.encode(RAW_PASSWORD))
+                    .thenReturn(ENCODED_PASSWORD);
+
+            when(userRepository.save(user))
+                    .thenReturn(savedUser);
+
+            when(jwtService.generateAccessToken(savedUser))
+                    .thenReturn(ACCESS_TOKEN);
+
+            when(jwtService.generateNewRefreshToken(savedUser))
+                    .thenReturn(REFRESH_TOKEN);
+
+            when(jwtService.getExpiry(REFRESH_TOKEN))
+                    .thenReturn(Date.from(EXPIRY_DATE));
+
+            when(userTokenRepository.save(any(UserToken.class)))
+                    .thenReturn(savedUserToken);
+            
+            when(savedUserToken.getExpiryDate())
+                    .thenReturn(EXPIRY_DATE);
+
+            when(userMapper.toResponse(
+                    savedUser,
+                    ACCESS_TOKEN,
+                    REFRESH_TOKEN,
+                    EXPIRY_DATE
+            )).thenReturn(expectedResponse);
+
             Instant customExpiry =
                     Instant.parse("2027-06-01T00:00:00Z");
 
@@ -287,6 +483,47 @@ public class AuthServiceImplTest {
         @DisplayName("Should return response from userMapper")
         void register_shouldReturnResponseFromUserMapper() {
 
+            when(request.email()).thenReturn(EMAIL);
+            when(request.password()).thenReturn(RAW_PASSWORD);
+
+            user = new User();
+
+            savedUser = mock(User.class);
+            savedUserToken = mock(UserToken.class);
+            expectedResponse = mock(AuthResponse.class);
+
+            when(userMapper.toEntity(request)).thenReturn(user);
+
+            when(passwordEncoder.encode(RAW_PASSWORD))
+                    .thenReturn(ENCODED_PASSWORD);
+
+            when(userRepository.save(user))
+                    .thenReturn(savedUser);
+
+            when(jwtService.generateAccessToken(savedUser))
+                    .thenReturn(ACCESS_TOKEN);
+
+            when(jwtService.generateNewRefreshToken(savedUser))
+                    .thenReturn(REFRESH_TOKEN);
+
+            when(jwtService.getExpiry(REFRESH_TOKEN))
+                    .thenReturn(Date.from(EXPIRY_DATE));
+
+            when(userTokenRepository.save(any(UserToken.class)))
+                    .thenReturn(savedUserToken);
+
+
+
+            when(savedUserToken.getExpiryDate())
+                    .thenReturn(EXPIRY_DATE);
+
+            when(userMapper.toResponse(
+                    savedUser,
+                    ACCESS_TOKEN,
+                    REFRESH_TOKEN,
+                    EXPIRY_DATE
+            )).thenReturn(expectedResponse);
+
             when(userRepository.findByEmail(EMAIL))
                     .thenReturn(Optional.empty());
 
@@ -302,10 +539,11 @@ public class AuthServiceImplTest {
             );
         }
 
-
         @Test
         @DisplayName("Should throw exception when email already exists")
         void register_shouldThrowExceptionWhenEmailAlreadyExists() {
+
+            when(request.email()).thenReturn(EMAIL);
 
             User existingUser = mock(User.class);
 
@@ -333,6 +571,15 @@ public class AuthServiceImplTest {
         @DisplayName("Should not generate tokens when email already exists")
         void register_shouldNotGenerateTokensWhenEmailExists() {
 
+            when(request.email()).thenReturn(EMAIL);
+//            when(request.password()).thenReturn(RAW_PASSWORD);
+
+            user = new User();
+
+            savedUser = mock(User.class);
+            savedUserToken = mock(UserToken.class);
+            expectedResponse = mock(AuthResponse.class);
+
             User existingUser = mock(User.class);
 
             when(existingUser.getEmail()).thenReturn(EMAIL);
@@ -354,6 +601,45 @@ public class AuthServiceImplTest {
         @DisplayName("Should continue when repository returns empty optional")
         void register_shouldContinueWhenRepositoryReturnsEmptyOptional() {
 
+            when(request.email()).thenReturn(EMAIL);
+            when(request.password()).thenReturn(RAW_PASSWORD);
+
+            user = new User();
+
+            savedUser = mock(User.class);
+            savedUserToken = mock(UserToken.class);
+            expectedResponse = mock(AuthResponse.class);
+
+            when(userMapper.toEntity(request)).thenReturn(user);
+
+            when(passwordEncoder.encode(RAW_PASSWORD))
+                    .thenReturn(ENCODED_PASSWORD);
+
+            when(userRepository.save(user))
+                    .thenReturn(savedUser);
+
+            when(jwtService.generateAccessToken(savedUser))
+                    .thenReturn(ACCESS_TOKEN);
+
+            when(jwtService.generateNewRefreshToken(savedUser))
+                    .thenReturn(REFRESH_TOKEN);
+
+            when(jwtService.getExpiry(REFRESH_TOKEN))
+                    .thenReturn(Date.from(EXPIRY_DATE));
+
+            when(userTokenRepository.save(any(UserToken.class)))
+                    .thenReturn(savedUserToken);
+
+            when(savedUserToken.getExpiryDate())
+                    .thenReturn(EXPIRY_DATE);
+
+            when(userMapper.toResponse(
+                    savedUser,
+                    ACCESS_TOKEN,
+                    REFRESH_TOKEN,
+                    EXPIRY_DATE
+            )).thenReturn(expectedResponse);
+
             when(userRepository.findByEmail(EMAIL))
                     .thenReturn(Optional.empty());
 
@@ -368,6 +654,45 @@ public class AuthServiceImplTest {
         @Test
         @DisplayName("Should continue when returned user email does not match request")
         void register_shouldContinueWhenReturnedUserEmailDoesNotMatchRequest() {
+
+            when(request.email()).thenReturn(EMAIL);
+            when(request.password()).thenReturn(RAW_PASSWORD);
+
+            user = new User();
+
+            savedUser = mock(User.class);
+            savedUserToken = mock(UserToken.class);
+            expectedResponse = mock(AuthResponse.class);
+
+            when(userMapper.toEntity(request)).thenReturn(user);
+
+            when(passwordEncoder.encode(RAW_PASSWORD))
+                    .thenReturn(ENCODED_PASSWORD);
+
+            when(userRepository.save(user))
+                    .thenReturn(savedUser);
+
+            when(jwtService.generateAccessToken(savedUser))
+                    .thenReturn(ACCESS_TOKEN);
+
+            when(jwtService.generateNewRefreshToken(savedUser))
+                    .thenReturn(REFRESH_TOKEN);
+
+            when(jwtService.getExpiry(REFRESH_TOKEN))
+                    .thenReturn(Date.from(EXPIRY_DATE));
+
+            when(userTokenRepository.save(any(UserToken.class)))
+                    .thenReturn(savedUserToken);
+            
+            when(savedUserToken.getExpiryDate())
+                    .thenReturn(EXPIRY_DATE);
+
+            when(userMapper.toResponse(
+                    savedUser,
+                    ACCESS_TOKEN,
+                    REFRESH_TOKEN,
+                    EXPIRY_DATE
+            )).thenReturn(expectedResponse);
 
             User differentUser = mock(User.class);
 
@@ -390,6 +715,14 @@ public class AuthServiceImplTest {
         @DisplayName("Should propagate exception when email lookup fails")
         void register_shouldPropagateExceptionWhenEmailLookupFails() {
 
+            when(request.email()).thenReturn(EMAIL);
+
+            user = new User();
+
+            savedUser = mock(User.class);
+            savedUserToken = mock(UserToken.class);
+            expectedResponse = mock(AuthResponse.class);
+
             RuntimeException exception =
                     new RuntimeException("Database unavailable");
 
@@ -409,6 +742,14 @@ public class AuthServiceImplTest {
         @Test
         @DisplayName("Should stops when entity mapping fails")
         void register_shouldStopWhenEntityMappingFails() {
+
+            when(request.email()).thenReturn(EMAIL);
+
+            user = new User();
+
+            savedUser = mock(User.class);
+            savedUserToken = mock(UserToken.class);
+            expectedResponse = mock(AuthResponse.class);
 
             RuntimeException exception =
                     new RuntimeException("Mapping failed");
@@ -432,6 +773,9 @@ public class AuthServiceImplTest {
         @DisplayName("Should stops when password encoding fails")
         void register_shouldStopWhenPasswordEncodingFails() {
 
+            when(request.email()).thenReturn(EMAIL);
+            when(request.password()).thenReturn(RAW_PASSWORD);
+
             RuntimeException exception =
                     new RuntimeException("Password encoding failed");
 
@@ -452,6 +796,23 @@ public class AuthServiceImplTest {
         @Test
         @DisplayName("Should stops when user persistence fails")
         void register_shouldStopWhenUserPersistenceFails() {
+
+            when(request.email()).thenReturn(EMAIL);
+            when(request.password()).thenReturn(RAW_PASSWORD);
+
+            user = new User();
+
+            savedUser = mock(User.class);
+            savedUserToken = mock(UserToken.class);
+            expectedResponse = mock(AuthResponse.class);
+
+            when(userMapper.toEntity(request)).thenReturn(user);
+
+            when(passwordEncoder.encode(RAW_PASSWORD))
+                    .thenReturn(ENCODED_PASSWORD);
+
+            when(userRepository.save(user))
+                    .thenReturn(savedUser);
 
             RuntimeException exception =
                     new RuntimeException("User persistence failed");
@@ -476,6 +837,26 @@ public class AuthServiceImplTest {
         @DisplayName("Should stops when access token generation fails")
         void register_shouldStopWhenAccessTokenGenerationFails() {
 
+            when(request.email()).thenReturn(EMAIL);
+            when(request.password()).thenReturn(RAW_PASSWORD);
+
+            user = new User();
+
+            savedUser = mock(User.class);
+            savedUserToken = mock(UserToken.class);
+            expectedResponse = mock(AuthResponse.class);
+
+            when(userMapper.toEntity(request)).thenReturn(user);
+
+            when(passwordEncoder.encode(RAW_PASSWORD))
+                    .thenReturn(ENCODED_PASSWORD);
+
+            when(userRepository.save(user))
+                    .thenReturn(savedUser);
+
+            when(jwtService.generateAccessToken(savedUser))
+                    .thenReturn(ACCESS_TOKEN);
+
             RuntimeException exception =
                     new RuntimeException("Access token generation failed");
 
@@ -498,11 +879,31 @@ public class AuthServiceImplTest {
         @DisplayName("Should stops when refresh token generation fails")
         void register_shouldStopWhenRefreshTokenGenerationFails() {
 
-            RuntimeException exception =
-                    new RuntimeException("Refresh token generation failed");
+            when(request.email()).thenReturn(EMAIL);
+            when(request.password()).thenReturn(RAW_PASSWORD);
+
+            user = new User();
+
+            savedUser = mock(User.class);
+            savedUserToken = mock(UserToken.class);
+            expectedResponse = mock(AuthResponse.class);
+
+            when(userMapper.toEntity(request)).thenReturn(user);
+
+            when(passwordEncoder.encode(RAW_PASSWORD))
+                    .thenReturn(ENCODED_PASSWORD);
+
+            when(userRepository.save(user))
+                    .thenReturn(savedUser);
+
+            when(jwtService.generateAccessToken(savedUser))
+                    .thenReturn(ACCESS_TOKEN);
 
             when(userRepository.findByEmail(EMAIL))
                     .thenReturn(Optional.empty());
+
+            RuntimeException exception =
+                    new RuntimeException("Refresh token generation failed");
 
             when(jwtService.generateNewRefreshToken(savedUser))
                     .thenThrow(exception);
@@ -516,7 +917,34 @@ public class AuthServiceImplTest {
         }
 
         @Test
+        @DisplayName("Should stop when expiry lookup fails")
         void register_shouldStopWhenExpiryLookupFails() {
+
+            when(request.email()).thenReturn(EMAIL);
+            when(request.password()).thenReturn(RAW_PASSWORD);
+
+            user = new User();
+
+            savedUser = mock(User.class);
+            savedUserToken = mock(UserToken.class);
+            expectedResponse = mock(AuthResponse.class);
+
+            when(userMapper.toEntity(request)).thenReturn(user);
+
+            when(passwordEncoder.encode(RAW_PASSWORD))
+                    .thenReturn(ENCODED_PASSWORD);
+
+            when(userRepository.save(user))
+                    .thenReturn(savedUser);
+
+            when(jwtService.generateAccessToken(savedUser))
+                    .thenReturn(ACCESS_TOKEN);
+
+            when(jwtService.generateNewRefreshToken(savedUser))
+                    .thenReturn(REFRESH_TOKEN);
+
+            when(jwtService.getExpiry(REFRESH_TOKEN))
+                    .thenReturn(Date.from(EXPIRY_DATE));
 
             RuntimeException exception =
                     new RuntimeException("Expiry lookup failed");
@@ -544,6 +972,32 @@ public class AuthServiceImplTest {
         @DisplayName("Should stop when refresh token persistence fails")
         void register_shouldStopWhenRefreshTokenPersistenceFails() {
 
+            when(request.email()).thenReturn(EMAIL);
+            when(request.password()).thenReturn(RAW_PASSWORD);
+
+            user = new User();
+
+            savedUser = mock(User.class);
+            savedUserToken = mock(UserToken.class);
+            expectedResponse = mock(AuthResponse.class);
+
+            when(userMapper.toEntity(request)).thenReturn(user);
+
+            when(passwordEncoder.encode(RAW_PASSWORD))
+                    .thenReturn(ENCODED_PASSWORD);
+
+            when(userRepository.save(user))
+                    .thenReturn(savedUser);
+
+            when(jwtService.generateAccessToken(savedUser))
+                    .thenReturn(ACCESS_TOKEN);
+
+            when(jwtService.generateNewRefreshToken(savedUser))
+                    .thenReturn(REFRESH_TOKEN);
+
+            when(jwtService.getExpiry(REFRESH_TOKEN))
+                    .thenReturn(Date.from(EXPIRY_DATE));
+
             RuntimeException exception =
                     new RuntimeException("Refresh token persistence failed");
 
@@ -569,6 +1023,45 @@ public class AuthServiceImplTest {
         @Test
         @DisplayName("Should propagate exception when response mappin fails")
         void register_shouldPropagateExceptionWhenResponseMappingFails() {
+
+            when(request.email()).thenReturn(EMAIL);
+            when(request.password()).thenReturn(RAW_PASSWORD);
+
+            user = new User();
+
+            savedUser = mock(User.class);
+            savedUserToken = mock(UserToken.class);
+            expectedResponse = mock(AuthResponse.class);
+
+            when(userMapper.toEntity(request)).thenReturn(user);
+
+            when(passwordEncoder.encode(RAW_PASSWORD))
+                    .thenReturn(ENCODED_PASSWORD);
+
+            when(userRepository.save(user))
+                    .thenReturn(savedUser);
+
+            when(jwtService.generateAccessToken(savedUser))
+                    .thenReturn(ACCESS_TOKEN);
+
+            when(jwtService.generateNewRefreshToken(savedUser))
+                    .thenReturn(REFRESH_TOKEN);
+
+            when(jwtService.getExpiry(REFRESH_TOKEN))
+                    .thenReturn(Date.from(EXPIRY_DATE));
+
+            when(userTokenRepository.save(any(UserToken.class)))
+                    .thenReturn(savedUserToken);
+
+            when(savedUserToken.getExpiryDate())
+                    .thenReturn(EXPIRY_DATE);
+
+            when(userMapper.toResponse(
+                    savedUser,
+                    ACCESS_TOKEN,
+                    REFRESH_TOKEN,
+                    EXPIRY_DATE
+            )).thenReturn(expectedResponse);
 
             RuntimeException exception =
                     new RuntimeException("Response mapping failed");
@@ -602,6 +1095,45 @@ public class AuthServiceImplTest {
         @DisplayName("Should perform operations in correct order")
         void register_shouldPerformOperationsInCorrectOrder() {
 
+            when(request.email()).thenReturn(EMAIL);
+            when(request.password()).thenReturn(RAW_PASSWORD);
+
+            user = new User();
+
+            savedUser = mock(User.class);
+            savedUserToken = mock(UserToken.class);
+            expectedResponse = mock(AuthResponse.class);
+
+            when(userMapper.toEntity(request)).thenReturn(user);
+
+            when(passwordEncoder.encode(RAW_PASSWORD))
+                    .thenReturn(ENCODED_PASSWORD);
+
+            when(userRepository.save(user))
+                    .thenReturn(savedUser);
+
+            when(jwtService.generateAccessToken(savedUser))
+                    .thenReturn(ACCESS_TOKEN);
+
+            when(jwtService.generateNewRefreshToken(savedUser))
+                    .thenReturn(REFRESH_TOKEN);
+
+            when(jwtService.getExpiry(REFRESH_TOKEN))
+                    .thenReturn(Date.from(EXPIRY_DATE));
+
+            when(userTokenRepository.save(any(UserToken.class)))
+                    .thenReturn(savedUserToken);
+
+            when(savedUserToken.getExpiryDate())
+                    .thenReturn(EXPIRY_DATE);
+
+            when(userMapper.toResponse(
+                    savedUser,
+                    ACCESS_TOKEN,
+                    REFRESH_TOKEN,
+                    EXPIRY_DATE
+            )).thenReturn(expectedResponse);
+
             when(userRepository.findByEmail(EMAIL))
                     .thenReturn(Optional.empty());
 
@@ -629,6 +1161,45 @@ public class AuthServiceImplTest {
         @DisplayName("Should save user only once")
         void register_shouldSaveUserOnlyOnce() {
 
+            when(request.email()).thenReturn(EMAIL);
+            when(request.password()).thenReturn(RAW_PASSWORD);
+
+            user = new User();
+
+            savedUser = mock(User.class);
+            savedUserToken = mock(UserToken.class);
+            expectedResponse = mock(AuthResponse.class);
+
+            when(userMapper.toEntity(request)).thenReturn(user);
+
+            when(passwordEncoder.encode(RAW_PASSWORD))
+                    .thenReturn(ENCODED_PASSWORD);
+
+            when(userRepository.save(user))
+                    .thenReturn(savedUser);
+
+            when(jwtService.generateAccessToken(savedUser))
+                    .thenReturn(ACCESS_TOKEN);
+
+            when(jwtService.generateNewRefreshToken(savedUser))
+                    .thenReturn(REFRESH_TOKEN);
+
+            when(jwtService.getExpiry(REFRESH_TOKEN))
+                    .thenReturn(Date.from(EXPIRY_DATE));
+
+            when(userTokenRepository.save(any(UserToken.class)))
+                    .thenReturn(savedUserToken);
+            
+            when(savedUserToken.getExpiryDate())
+                    .thenReturn(EXPIRY_DATE);
+
+            when(userMapper.toResponse(
+                    savedUser,
+                    ACCESS_TOKEN,
+                    REFRESH_TOKEN,
+                    EXPIRY_DATE
+            )).thenReturn(expectedResponse);
+
             when(userRepository.findByEmail(EMAIL))
                     .thenReturn(Optional.empty());
 
@@ -640,6 +1211,45 @@ public class AuthServiceImplTest {
         @Test
         @DisplayName("Should save refresh token only once")
         void register_shouldSaveRefreshTokenOnlyOnce() {
+
+            when(request.email()).thenReturn(EMAIL);
+            when(request.password()).thenReturn(RAW_PASSWORD);
+
+            user = new User();
+
+            savedUser = mock(User.class);
+            savedUserToken = mock(UserToken.class);
+            expectedResponse = mock(AuthResponse.class);
+
+            when(userMapper.toEntity(request)).thenReturn(user);
+
+            when(passwordEncoder.encode(RAW_PASSWORD))
+                    .thenReturn(ENCODED_PASSWORD);
+
+            when(userRepository.save(user))
+                    .thenReturn(savedUser);
+
+            when(jwtService.generateAccessToken(savedUser))
+                    .thenReturn(ACCESS_TOKEN);
+
+            when(jwtService.generateNewRefreshToken(savedUser))
+                    .thenReturn(REFRESH_TOKEN);
+
+            when(jwtService.getExpiry(REFRESH_TOKEN))
+                    .thenReturn(Date.from(EXPIRY_DATE));
+
+            when(userTokenRepository.save(any(UserToken.class)))
+                    .thenReturn(savedUserToken);
+
+            when(savedUserToken.getExpiryDate())
+                    .thenReturn(EXPIRY_DATE);
+
+            when(userMapper.toResponse(
+                    savedUser,
+                    ACCESS_TOKEN,
+                    REFRESH_TOKEN,
+                    EXPIRY_DATE
+            )).thenReturn(expectedResponse);
 
             when(userRepository.findByEmail(EMAIL))
                     .thenReturn(Optional.empty());
@@ -653,6 +1263,45 @@ public class AuthServiceImplTest {
         @Test
         @DisplayName("Should call response mapper only once")
         void register_shouldCallResponseMapperOnlyOnce() {
+
+            when(request.email()).thenReturn(EMAIL);
+            when(request.password()).thenReturn(RAW_PASSWORD);
+
+            user = new User();
+
+            savedUser = mock(User.class);
+            savedUserToken = mock(UserToken.class);
+            expectedResponse = mock(AuthResponse.class);
+
+            when(userMapper.toEntity(request)).thenReturn(user);
+
+            when(passwordEncoder.encode(RAW_PASSWORD))
+                    .thenReturn(ENCODED_PASSWORD);
+
+            when(userRepository.save(user))
+                    .thenReturn(savedUser);
+
+            when(jwtService.generateAccessToken(savedUser))
+                    .thenReturn(ACCESS_TOKEN);
+
+            when(jwtService.generateNewRefreshToken(savedUser))
+                    .thenReturn(REFRESH_TOKEN);
+
+            when(jwtService.getExpiry(REFRESH_TOKEN))
+                    .thenReturn(Date.from(EXPIRY_DATE));
+
+            when(userTokenRepository.save(any(UserToken.class)))
+                    .thenReturn(savedUserToken);
+
+            when(savedUserToken.getExpiryDate())
+                    .thenReturn(EXPIRY_DATE);
+
+            when(userMapper.toResponse(
+                    savedUser,
+                    ACCESS_TOKEN,
+                    REFRESH_TOKEN,
+                    EXPIRY_DATE
+            )).thenReturn(expectedResponse);
 
             when(userRepository.findByEmail(EMAIL))
                     .thenReturn(Optional.empty());
@@ -824,7 +1473,9 @@ public class AuthServiceImplTest {
 
             UsernamePasswordAuthenticationToken token = captor.getValue();
 
+            assertNotNull(token.getPrincipal());
             assertThat(token.getPrincipal()).isEqualTo(EMAIL);
+            assertNotNull(token.getCredentials());
             assertThat(token.getCredentials()).isEqualTo(PASSWORD);
         }
 
@@ -1023,7 +1674,6 @@ public class AuthServiceImplTest {
             doReturn(authorities)
                     .when(user)
                     .getAuthorities();
-//            when(user.getAuthorities()).thenReturn(authorities);
 
             when(jwtService.generateAccessToken(user))
                     .thenReturn(ACCESS_TOKEN);
@@ -1039,6 +1689,7 @@ public class AuthServiceImplTest {
             Authentication contextAuthentication =
                     SecurityContextHolder.getContext().getAuthentication();
 
+            assertNotNull(contextAuthentication);
             assertThat(contextAuthentication.getAuthorities().toArray())
                     .containsExactlyElementsOf(new ArrayList<>(authorities));
         }
@@ -1149,7 +1800,6 @@ public class AuthServiceImplTest {
             doReturn(authorities)
                     .when(user)
                     .getAuthorities();
-//            when(user.getAuthorities()).thenReturn(authorities);
 
             when(jwtService.generateAccessToken(user))
                     .thenReturn(ACCESS_TOKEN);
@@ -1320,7 +1970,6 @@ public class AuthServiceImplTest {
             doReturn(authorities)
                     .when(user)
                     .getAuthorities();
-//            when(user.getAuthorities()).thenReturn(authorities);
 
             when(jwtService.generateAccessToken(user))
                     .thenReturn(ACCESS_TOKEN);
@@ -1370,7 +2019,6 @@ public class AuthServiceImplTest {
             doReturn(authorities)
                     .when(user)
                     .getAuthorities();
-//            when(user.getAuthorities()).thenReturn(authorities);
 
             when(jwtService.generateAccessToken(user))
                     .thenReturn(ACCESS_TOKEN);
@@ -1421,7 +2069,6 @@ public class AuthServiceImplTest {
             doReturn(authorities)
                     .when(user)
                     .getAuthorities();
-//            when(user.getAuthorities()).thenReturn(authorities);
 
             when(jwtService.generateAccessToken(user))
                     .thenReturn(ACCESS_TOKEN);
@@ -1465,7 +2112,6 @@ public class AuthServiceImplTest {
             doReturn(authorities)
                     .when(user)
                     .getAuthorities();
-//            when(user.getAuthorities()).thenReturn(authorities);
 
             when(jwtService.generateAccessToken(user))
                     .thenReturn(ACCESS_TOKEN);
@@ -1546,7 +2192,6 @@ public class AuthServiceImplTest {
             doReturn(authorities)
                     .when(user)
                     .getAuthorities();
-//            when(user.getAuthorities()).thenReturn(authorities);
 
             when(jwtService.generateAccessToken(user))
                     .thenReturn(ACCESS_TOKEN);
@@ -1584,7 +2229,6 @@ public class AuthServiceImplTest {
             doReturn(authorities)
                     .when(user)
                     .getAuthorities();
-//            when(user.getAuthorities()).thenReturn(authorities);
 
             when(jwtService.generateAccessToken(user))
                     .thenReturn(ACCESS_TOKEN);
@@ -1680,7 +2324,6 @@ public class AuthServiceImplTest {
             doReturn(authorities)
                     .when(user)
                     .getAuthorities();
-//            when(user.getAuthorities()).thenReturn(authorities);
 
             when(jwtService.generateAccessToken(user))
                     .thenReturn(ACCESS_TOKEN);
@@ -1730,7 +2373,6 @@ public class AuthServiceImplTest {
             doReturn(authorities)
                     .when(user)
                     .getAuthorities();
-//            when(user.getAuthorities()).thenReturn(authorities);
 
             when(jwtService.generateAccessToken(user))
                     .thenReturn(ACCESS_TOKEN);
@@ -1785,7 +2427,6 @@ public class AuthServiceImplTest {
             doReturn(authorities)
                     .when(user)
                     .getAuthorities();
-//            when(user.getAuthorities()).thenReturn(authorities);
 
             when(jwtService.generateAccessToken(user))
                     .thenReturn(ACCESS_TOKEN);
@@ -1908,6 +2549,224 @@ public class AuthServiceImplTest {
             verify(userMapper, never()).toEntity(any());
             verify(passwordEncoder, never()).encode(anyString());
         }
+    }
+
+    @Nested
+    @DisplayName("refreshToken()")
+    class RefreshTokenTests {
+
+        @Test
+        void refreshToken_shouldReturnNewTokens_whenTokenIsValid() {
+            String oldRefreshToken = "old-refresh-token";
+            String newRefreshToken = "new-refresh-token";
+            String newAccessToken = "new-access-token";
+
+            Instant expiry = Instant.now().plusSeconds(3600);
+
+            User user = new User();
+            UserToken userToken = new UserToken(
+                    oldRefreshToken, user, expiry
+            );
+
+            when(userTokenRepository.findByRefreshToken(oldRefreshToken))
+                    .thenReturn(Optional.of(userToken));
+
+            when(jwtService.generateAccessToken(user))
+                    .thenReturn(newAccessToken);
+
+            when(jwtService.generateNewRefreshToken(user))
+                    .thenReturn(newRefreshToken);
+
+            when(jwtService.getExpiry(newRefreshToken))
+                    .thenReturn(Date.from(expiry));
+
+            when(userTokenRepository.save(userToken))
+                    .thenReturn(userToken);
+
+            UserTokenResponse response = authService.refreshToken(oldRefreshToken);
+
+            assertNotNull(response);
+            assertEquals(newAccessToken, response.accessToken());
+            assertEquals(newRefreshToken, response.refreshToken());
+            assertThat(expiry).isBetween(response.expirationIn().minusSeconds(1),
+                    response.expirationIn().plusSeconds(1));
+
+            assertEquals(newRefreshToken, userToken.getRefreshToken());
+            assertThat(expiry).isBetween(userToken.getExpiryDate().minusSeconds(1),
+                    userToken.getExpiryDate().plusSeconds(1));
+            assertFalse(userToken.isRevoked());
+
+            verify(userTokenRepository).save(userToken);
+        }
+
+        @Test
+        void refreshToken_shouldThrowException_whenTokenDoesNotExist() {
+            String refreshToken = "invalid-token";
+
+            when(userTokenRepository.findByRefreshToken(refreshToken))
+                    .thenReturn(Optional.empty());
+
+            assertThrows(
+                    UserTokenNotFoundException.class,
+                    () -> authService.refreshToken(refreshToken)
+            );
+
+            verify(userTokenRepository, never()).save(any());
+        }
+
+        @Test
+        void refreshToken_shouldThrowException_whenTokenIsRevoked() {
+            String refreshToken = "revoked-token";
+
+            UserToken userToken = new UserToken(
+                    refreshToken,
+                    new User(),
+                    Instant.now().plusSeconds(3600)
+            );
+
+            userToken.setRevoked(true);
+
+            when(userTokenRepository.findByRefreshToken(refreshToken))
+                    .thenReturn(Optional.of(userToken));
+
+            assertThrows(
+                    RefreshTokenRevokedException.class,
+                    () -> authService.refreshToken(refreshToken)
+            );
+
+            verify(userTokenRepository, never()).save(any());
+        }
+
+        @Test
+        void refreshToken_shouldThrowException_whenTokenIsExpired() {
+            String refreshToken = "expired-token";
+
+            UserToken userToken = new UserToken(
+                    refreshToken,
+                    new User(),
+                    Instant.now().minusSeconds(3600)
+            );
+
+            when(userTokenRepository.findByRefreshToken(refreshToken))
+                    .thenReturn(Optional.of(userToken));
+
+            assertThrows(
+                    RefreshTokenExpiredException.class,
+                    () -> authService.refreshToken(refreshToken)
+            );
+
+            verify(userTokenRepository, never()).save(any());
+        }
+
+    }
+
+    @Nested
+    @DisplayName("logout()")
+    class LogoutTests {
+
+        @Test
+        void refreshToken_shouldReturnNewTokens_whenTokenIsValid() {
+            String oldRefreshToken = "old-refresh-token";
+            String newRefreshToken = "new-refresh-token";
+            String newAccessToken = "new-access-token";
+
+            Instant expiry = Instant.now().plusSeconds(3600);
+
+            User user = new User();
+            UserToken userToken = new UserToken(
+                    oldRefreshToken, user, expiry
+            );
+
+            when(userTokenRepository.findByRefreshToken(oldRefreshToken))
+                    .thenReturn(Optional.of(userToken));
+
+            when(jwtService.generateAccessToken(user))
+                    .thenReturn(newAccessToken);
+
+            when(jwtService.generateNewRefreshToken(user))
+                    .thenReturn(newRefreshToken);
+
+            when(jwtService.getExpiry(newRefreshToken))
+                    .thenReturn(Date.from(expiry));
+
+            when(userTokenRepository.save(userToken))
+                    .thenReturn(userToken);
+
+            UserTokenResponse response = authService.refreshToken(oldRefreshToken);
+
+            assertNotNull(response);
+            assertEquals(newAccessToken, response.accessToken());
+            assertEquals(newRefreshToken, response.refreshToken());
+            assertThat(expiry).isBetween(response.expirationIn().minusSeconds(1),
+                    response.expirationIn().plusSeconds(1));
+
+            assertEquals(newRefreshToken, userToken.getRefreshToken());
+            assertThat(expiry).isBetween(userToken.getExpiryDate().minusSeconds(1),
+                    userToken.getExpiryDate().plusSeconds(1));
+            assertFalse(userToken.isRevoked());
+
+            verify(userTokenRepository).save(userToken);
+        }
+
+        @Test
+        void refreshToken_shouldThrowException_whenTokenDoesNotExist() {
+            String refreshToken = "invalid-token";
+
+            when(userTokenRepository.findByRefreshToken(refreshToken))
+                    .thenReturn(Optional.empty());
+
+            assertThrows(
+                    UserTokenNotFoundException.class,
+                    () -> authService.refreshToken(refreshToken)
+            );
+
+            verify(userTokenRepository, never()).save(any());
+        }
+
+        @Test
+        void refreshToken_shouldThrowException_whenTokenIsRevoked() {
+            String refreshToken = "revoked-token";
+
+            UserToken userToken = new UserToken(
+                    refreshToken,
+                    new User(),
+                    Instant.now().plusSeconds(3600)
+            );
+
+            userToken.setRevoked(true);
+
+            when(userTokenRepository.findByRefreshToken(refreshToken))
+                    .thenReturn(Optional.of(userToken));
+
+            assertThrows(
+                    RefreshTokenRevokedException.class,
+                    () -> authService.refreshToken(refreshToken)
+            );
+
+            verify(userTokenRepository, never()).save(any());
+        }
+
+        @Test
+        void refreshToken_shouldThrowException_whenTokenIsExpired() {
+            String refreshToken = "expired-token";
+
+            UserToken userToken = new UserToken(
+                    refreshToken,
+                    new User(),
+                    Instant.now().minusSeconds(3600)
+            );
+
+            when(userTokenRepository.findByRefreshToken(refreshToken))
+                    .thenReturn(Optional.of(userToken));
+
+            assertThrows(
+                    RefreshTokenExpiredException.class,
+                    () -> authService.refreshToken(refreshToken)
+            );
+
+            verify(userTokenRepository, never()).save(any());
+        }
+
     }
 
 }

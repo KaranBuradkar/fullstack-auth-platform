@@ -24,7 +24,7 @@
                 logs/auth-platform.%d{yyyy-MM-dd}.%i.log.gz
             </fileNamePattern>
 
-            <!-- Rotate when file reaches 10 MB -->
+            <!-- Rotate when a file reaches 10 MB -->
             <maxFileSize>10MB</maxFileSize>
 
             <!-- Keep logs for 30 days -->
